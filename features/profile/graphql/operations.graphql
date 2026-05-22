@@ -1,0 +1,22 @@
+query GetUserPosts($userId: Int!, $limit: Int, $cursor: Int) {
+  getUserPosts(userId: $userId, limit: $limit, cursor: $cursor) {
+    posts {
+      id
+      content
+      postType
+      mediaUrls
+      likeCount
+      commentCount
+      shareCount
+      createdAt
+      user {
+        id
+        username
+        fullName
+        avatarUrl
+      }
+    }
+    hasMore
+    nextCursor
+  }
+}

@@ -1,9 +1,7 @@
-import Header from "../components/Header";
-import LeftSidebar from "../components/LeftSidebar";
-import RightSidebar from "../components/RightSidebar";
-import { getCurrentUser } from "../lib/services/auth";
+import { FeedShell } from "@/features/feed/ui/layout/FeedShell";
+import { getCurrentUser } from "@/features/auth/lib/auth";
 
-export default async function Layout({
+export default async function HomeLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -11,15 +9,20 @@ export default async function Layout({
   const user = await getCurrentUser();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <Header user={user} />
-      <LeftSidebar />
-      <RightSidebar />
-
-      {/* Main Feed */}
-      <main className="pt-16 lg:pl-64 xl:pr-64" role="feed">
-        {children}
-      </main>
-    </div>
+    <FeedShell
+      user={
+        user
+          ? {
+              id: String(user.id ?? user.userId ?? ""),
+              username: user.username,
+              fullName: user.fullName || user.username,
+              email: user.email,
+              avatarUrl: user.avatarUrl ?? undefined,
+            }
+          : undefined
+      }
+    >
+      {children}
+    </FeedShell>
   );
 }

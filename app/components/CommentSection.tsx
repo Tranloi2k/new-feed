@@ -3,36 +3,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useSubscription } from "@apollo/client/react";
 import { useSession } from "next-auth/react";
+import { commentServiceContext } from "@/features/shared/lib/apollo/apollo-client";
 import {
-  GET_POST_COMMENTS,
-  CREATE_COMMENT,
-  COMMENT_ADDED,
-  COMMENT_DELETED,
-} from "../lib/graphql/commentQueries";
-import { Comment } from "../types/comment";
-interface CommentsData {
-  getComments: {
-    comments: Comment[];
-    hasMore: boolean;
-    nextCursor: number;
-  };
-}
+  GetCommentsDocument,
+  CreateCommentDocument,
+  CommentAddedDocument,
+  CommentDeletedDocument,
+  type GetCommentsQuery,
+  type CreateCommentMutation,
+  type CommentAddedSubscription,
+  type CommentDeletedSubscription,
+  type Comment,
+} from "@/features/comments/lib/documents";
 
-interface CreateCommentData {
-  createComment: {
-    success: boolean;
-    message: string;
-    comment: Comment;
-  };
-}
-
-interface CommentAddedData {
-  commentAdded: Comment;
-}
-
-interface CommentDeletedData {
-  commentDeleted: number;
-}
+const commentCtx = commentServiceContext;
 
 interface CommentSectionProps {
   postId: string;
@@ -43,18 +27,21 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const { data: session } = useSession();
   const commentSectionRef = useRef<HTMLDivElement>(null);
+  const postIdInt = parseInt(postId, 10);
+  const queryVars = { postId: postIdInt, limit: 5, cursor: null as number | null };
 
-  const { data, loading, error, fetchMore } = useQuery<CommentsData>(
-    GET_POST_COMMENTS,
+  const { data, loading, error, fetchMore } = useQuery<GetCommentsQuery>(
+    GetCommentsDocument,
     {
-      variables: { postId, limit: 5, cursor: null },
+      variables: queryVars,
+      context: commentCtx,
     }
   );
 
-  // GraphQL Subscription cho real-time comments
-  useSubscription<CommentAddedData>(COMMENT_ADDED, {
-    variables: { postId: parseInt(postId) },
-    skip: !isVisible, // Chỉ subscribe khi visible
+  useSubscription<CommentAddedSubscription>(CommentAddedDocument, {
+    variables: { postId: postIdInt },
+    context: commentCtx,
+    skip: !isVisible,
     onData: ({ client, data: subData }) => {
       const newComment = subData.data?.commentAdded;
       if (!newComment) return;
@@ -63,9 +50,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
       // Update cache manually
       try {
-        const existingComments = client.readQuery<CommentsData>({
-          query: GET_POST_COMMENTS,
-          variables: { postId, limit: 5, cursor: null },
+        const existingComments = client.readQuery<GetCommentsQuery>({
+          query: GetCommentsDocument,
+          variables: queryVars,
         });
 
         if (existingComments) {
@@ -76,8 +63,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
           if (!exists) {
             client.writeQuery({
-              query: GET_POST_COMMENTS,
-              variables: { postId, limit: 5, cursor: null },
+              query: GetCommentsDocument,
+              variables: queryVars,
               data: {
                 getComments: {
                   ...existingComments.getComments,
@@ -96,10 +83,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     },
   });
 
-  const { error: subscriptionError } = useSubscription<CommentDeletedData>(
-    COMMENT_DELETED,
+  const { error: subscriptionError } = useSubscription<CommentDeletedSubscription>(
+    CommentDeletedDocument,
     {
-      variables: { postId: parseInt(postId) },
+      variables: { postId: postIdInt },
+      context: commentCtx,
       skip: !isVisible,
       onData: ({ client, data: subData }) => {
         // commentDeleted trả về Int! (commentId), không phải object
@@ -110,20 +98,20 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
         // Remove from cache
         try {
-          const existingComments = client.readQuery<CommentsData>({
-            query: GET_POST_COMMENTS,
-            variables: { postId, limit: 5, cursor: null },
+          const existingComments = client.readQuery<GetCommentsQuery>({
+            query: GetCommentsDocument,
+            variables: queryVars,
           });
 
           if (existingComments) {
             client.writeQuery({
-              query: GET_POST_COMMENTS,
-              variables: { postId, limit: 5, cursor: null },
+              query: GetCommentsDocument,
+              variables: queryVars,
               data: {
                 getComments: {
                   ...existingComments.getComments,
                   comments: existingComments.getComments.comments.filter(
-                    (c) => c.id !== deletedCommentId.toString()
+                    (c) => c.id !== deletedCommentId
                   ),
                 },
               },
@@ -161,23 +149,25 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   }, []);
 
   const [createComment, { loading: submitting }] =
-    useMutation<CreateCommentData>(CREATE_COMMENT, {
+    useMutation<CreateCommentMutation>(CreateCommentDocument, {
+      context: commentCtx,
       optimisticResponse: session
         ? () => ({
             createComment: {
-              __typename: "CommentResponse",
+              __typename: "CreateCommentResponse",
               success: true,
               message: "Comment created",
               comment: {
                 __typename: "Comment",
-                id: `temp-${Date.now()}`,
+                id: -Date.now(),
                 content: commentText.trim(),
                 createdAt: new Date().toISOString(),
                 user: {
                   __typename: "User",
-                  id: session.user.id || "temp-user",
+                  id: Number(session.user.id) || 0,
                   username: session.user.name || "User",
                   fullName: session.user.name || "User",
+                  email: session.user.email || "",
                   avatarUrl: session.user.image || "",
                 },
               },
@@ -188,9 +178,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         if (!mutationData?.createComment?.success) return;
 
         try {
-          const existingComments = cache.readQuery<CommentsData>({
-            query: GET_POST_COMMENTS,
-            variables: { postId, limit: 5, cursor: null },
+          const existingComments = cache.readQuery<GetCommentsQuery>({
+            query: GetCommentsDocument,
+            variables: queryVars,
           });
 
           if (existingComments && mutationData.createComment.comment) {
@@ -209,11 +199,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                 );
 
               cache.writeQuery({
-                query: GET_POST_COMMENTS,
-                variables: { postId, limit: 5, cursor: null },
+                query: GetCommentsDocument,
+                variables: queryVars,
                 data: {
                   getComments: {
-                    __typename: "CommentsConnection",
+                    __typename: "CommentsResponse",
                     comments: [newComment, ...commentsWithoutTemp],
                     hasMore: existingComments.getComments.hasMore,
                     nextCursor: existingComments.getComments.nextCursor,
@@ -245,7 +235,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       await createComment({
         variables: {
           input: {
-            postId: postId,
+            postId: postIdInt,
             content: commentText.trim(),
           },
         },
@@ -283,109 +273,101 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   };
 
   return (
-    <div
-      ref={commentSectionRef}
-      className="border-t border-gray-200 dark:border-gray-700"
-    >
-      <div className="p-4 space-y-3">
-        {/* Live indicator */}
+    <div ref={commentSectionRef} className="px-4 py-4 sm:px-5">
+      <div className="space-y-3">
         {isVisible && !subscriptionError && (
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success)] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--success)]" />
             </span>
-            <span>Live updates (GraphQL Subscription)</span>
+            <span>Đang cập nhật realtime</span>
           </div>
         )}
 
-        {/* Subscription Error indicator */}
         {subscriptionError && (
-          <div className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Subscription error: {subscriptionError.message}</span>
-          </div>
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Kết nối realtime tạm gián đoạn
+          </p>
         )}
 
-        {/* Comment input */}
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-violet-500 text-sm font-semibold text-white">
             {session?.user?.name?.[0] || "U"}
           </div>
-          <div className="flex-1 flex gap-2">
+          <div className="flex flex-1 items-center gap-2 rounded-full border border-[color:var(--border)] bg-[var(--surface)] px-3 py-1 focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Viết bình luận..."
-              className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="min-w-0 flex-1 bg-transparent py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
               disabled={submitting}
             />
             <button
               type="submit"
               disabled={!commentText.trim() || submitting}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-full text-sm font-medium transition-colors"
+              className="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-[var(--accent)] transition-opacity hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? "..." : "Gửi"}
+              {submitting ? "…" : "Gửi"}
             </button>
           </div>
         </form>
 
-        {/* Comments list */}
         {loading && !data && (
-          <div className="text-center py-4">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center py-4">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
           </div>
         )}
 
         {error && (
-          <div className="text-center text-red-500 text-sm py-2">
+          <p className="py-2 text-center text-sm text-red-500">
             Không thể tải bình luận
-          </div>
+          </p>
         )}
 
-        {data?.getComments.comments.map((comment) => (
-          <div key={comment.id} className="flex gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {comment.user.fullName?.[0] || comment.user.username[0]}
-            </div>
-            <div className="flex-1">
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-3 py-2">
-                <div className="font-semibold text-sm">
-                  {comment.user.fullName || comment.user.username}
-                </div>
-                <div className="text-sm mt-1 whitespace-pre-wrap break-words">
-                  {comment.content}
-                </div>
+        <div className="space-y-3">
+          {data?.getComments.comments.map((comment) => (
+            <div key={comment.id} className="flex gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-violet-500 text-xs font-semibold text-white">
+                {comment.user?.fullName?.[0] ||
+                  comment.user?.username?.[0] ||
+                  "?"}
               </div>
-              <div className="px-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {formatTime(comment.createdAt)}
+              <div className="min-w-0 flex-1">
+                <div className="rounded-[var(--radius-lg)] rounded-tl-md bg-[var(--surface)] px-3.5 py-2.5 shadow-sm ring-1 ring-[color:var(--border)]">
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    {comment.user?.fullName ||
+                      comment.user?.username ||
+                      "User"}
+                  </p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-[var(--text-primary)] whitespace-pre-wrap break-words">
+                    {comment.content}
+                  </p>
+                </div>
+                <p className="mt-1 px-1 text-xs text-[var(--text-muted)]">
+                  {formatTime(comment.createdAt)}
+                </p>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
-        {/* Load more button */}
         {data?.getComments.hasMore && (
           <button
+            type="button"
             onClick={loadMoreComments}
             disabled={loading}
-            className="w-full text-sm text-blue-600 dark:text-blue-400 hover:underline py-2 disabled:opacity-50"
+            className="w-full py-2 text-sm font-medium text-[var(--accent)] hover:underline disabled:opacity-50"
           >
             {loading ? "Đang tải..." : "Xem thêm bình luận"}
           </button>
         )}
 
         {data?.getComments.comments.length === 0 && !loading && (
-          <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
-            Chưa có bình luận nào
-          </div>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">
+            Hãy là người bình luận đầu tiên 💬
+          </p>
         )}
       </div>
     </div>

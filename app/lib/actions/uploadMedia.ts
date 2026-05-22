@@ -1,5 +1,6 @@
 "use server";
 import { cookies } from "next/headers";
+import { getApiUrl } from "@/features/shared/lib/env";
 
 export const uploadFiles = async (files: File[]): Promise<string[]> => {
   try {
@@ -15,7 +16,7 @@ export const uploadFiles = async (files: File[]): Promise<string[]> => {
       throw new Error("Không tìm thấy token xác thực");
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = getApiUrl();
     const response = await fetch(`${apiUrl}/api/media/upload`, {
       method: "POST",
       credentials: "include", // Tự động gửi cookies

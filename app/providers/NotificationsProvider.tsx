@@ -1,17 +1,17 @@
 "use client";
 import {
-  NotificationMessage,
-  useNotificationsWS,
-} from "../hooks/useNotificationsWS";
+  useNotifications,
+} from "@/features/notifications/hooks/useNotifications";
+import type { NotificationItem } from "@/features/notifications/lib/notifications";
 import React from "react";
 
 interface NotificationsProviderProps {
-  children: (ctx: { notifications: NotificationMessage[] }) => React.ReactNode;
+  children: (ctx: { notifications: NotificationItem[] }) => React.ReactNode;
 }
 
 export function NotificationsProvider({
   children,
 }: NotificationsProviderProps) {
-  const notifications = useNotificationsWS();
+  const { notifications } = useNotifications();
   return <>{children({ notifications })}</>;
 }

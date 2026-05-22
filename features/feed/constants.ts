@@ -1,0 +1,2 @@
+export const POST_REFRESH_THRESHOLD = 5 * 60 * 1000;
+export const MAX_CONTENT_LENGTH = 5000;

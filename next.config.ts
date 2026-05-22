@@ -1,7 +1,37 @@
 import type { NextConfig } from "next";
 
+const gatewayUrl =
+  process.env.API_GATEWAY_URL?.replace(/\/$/, "") || "http://localhost:8080";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    // Do NOT proxy /api/auth/session|csrf|providers|... — those are NextAuth (App Router).
+    return [
+      { source: "/api/auth/login", destination: `${gatewayUrl}/api/auth/login` },
+      { source: "/api/auth/signup", destination: `${gatewayUrl}/api/auth/signup` },
+      { source: "/api/auth/logout", destination: `${gatewayUrl}/api/auth/logout` },
+      {
+        source: "/api/auth/validate-token",
+        destination: `${gatewayUrl}/api/auth/validate-token`,
+      },
+      { source: "/api/auth/me", destination: `${gatewayUrl}/api/auth/me` },
+      {
+        source: "/api/users/:id/profile",
+        destination: `${gatewayUrl}/api/users/:id/profile`,
+      },
+      { source: "/api/users/:path*", destination: `${gatewayUrl}/api/users/:path*` },
+      {
+        source: "/api/notifications/:path*",
+        destination: `${gatewayUrl}/api/notifications/:path*`,
+      },
+      { source: "/api/media/:path*", destination: `${gatewayUrl}/api/media/:path*` },
+      { source: "/graphql/post", destination: `${gatewayUrl}/graphql/post` },
+      {
+        source: "/graphql/comment",
+        destination: `${gatewayUrl}/graphql/comment`,
+      },
+    ];
+  },
   experimental: {
     authInterrupts: true,
     serverActions: {

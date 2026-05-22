@@ -1,0 +1,75 @@
+query GetComments($postId: Int!, $limit: Int, $cursor: Int) {
+  getComments(postId: $postId, limit: $limit, cursor: $cursor) {
+    comments {
+      id
+      content
+      createdAt
+      user {
+        id
+        username
+        fullName
+        avatarUrl
+      }
+      replies {
+        id
+        content
+        createdAt
+        user {
+          id
+          username
+          fullName
+          avatarUrl
+        }
+      }
+    }
+    hasMore
+    nextCursor
+  }
+}
+
+mutation CreateComment($input: CreateCommentInput!) {
+  createComment(input: $input) {
+    success
+    message
+    comment {
+      id
+      content
+      createdAt
+      user {
+        id
+        username
+        fullName
+        avatarUrl
+      }
+    }
+  }
+}
+
+subscription CommentAdded($postId: Int!) {
+  commentAdded(postId: $postId) {
+    id
+    content
+    createdAt
+    user {
+      id
+      username
+      fullName
+      avatarUrl
+    }
+    replies {
+      id
+      content
+      createdAt
+      user {
+        id
+        username
+        fullName
+        avatarUrl
+      }
+    }
+  }
+}
+
+subscription CommentDeleted($postId: Int!) {
+  commentDeleted(postId: $postId)
+}

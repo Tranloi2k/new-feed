@@ -3,22 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.0.9",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
     "graphql": "^16.12.0",
     "graphql-ws": "^6.0.6",
+    "lucide-react": "^1.16.0",
     "next": "16.0.6",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typed-document-node": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

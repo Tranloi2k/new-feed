@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ApolloWrapper } from "./lib/apollo/apollo-wrapper";
+import { ApolloWrapper } from "@/features/shared/lib/apollo/apollo-wrapper";
 import { SessionProvider } from "./providers/SessionProvider";
 
 const geistSans = Geist({
@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NewFeed - Mạng xã hội",
-  description: "Mạng xã hội giống Facebook",
+  title: "NewFeed — Mạng xã hội hiện đại",
+  description: "Kết nối, chia sẻ và khám phá — trải nghiệm social 2026",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

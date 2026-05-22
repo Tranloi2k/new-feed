@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { NotificationList } from "./NotificationList";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
-import { logoutAction } from "../lib/actions/auth";
+import { logoutAction } from "@/features/auth/actions/auth";
 import Image from "next/image";
-import { useNotificationsWS } from "../hooks/useNotificationsWS";
+import { useNotifications } from "@/features/notifications/hooks/useNotifications";
+import { NotificationList } from "@/features/notifications/components/NotificationList";
 
 interface HeaderProps {
   user?: {
@@ -24,7 +23,7 @@ export default function Header({ user }: HeaderProps) {
   const router = useRouter();
   const apolloClient = useApolloClient();
   const [showNotifications, setShowNotifications] = useState(false);
-  const notifications = useNotificationsWS();
+  const { notifications, unreadCount } = useNotifications();
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -36,13 +35,7 @@ export default function Header({ user }: HeaderProps) {
       const result = await logoutAction();
 
       if (result.success) {
-        // Clear Apollo Client cache to prevent showing old data
         await apolloClient.clearStore();
-
-        // Sign out from NextAuth
-        await signOut({ redirect: false });
-
-        // Redirect to login
         router.push("/login");
       } else {
         console.error("Logout failed:", result.error);
@@ -113,7 +106,7 @@ export default function Header({ user }: HeaderProps) {
                 />
               </svg>
               {/* Red dot indicator if there is at least 1 notification */}
-              {notifications.length > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900 animate-pulse"></span>
               )}
             </button>
