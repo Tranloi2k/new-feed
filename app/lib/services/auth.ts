@@ -8,7 +8,7 @@ async function login(params: { email: string; password: string }) {
     headers: { "Content-Type": "application/json" },
   };
   const response = await fetch(
-    `${process.env.EXTERNAL_API_URL}/api/auth/login`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
     options
   );
 
@@ -27,7 +27,7 @@ async function logout() {
 
     if (accessToken?.value) {
       // Call backend logout endpoint
-      await fetch(`${process.env.EXTERNAL_API_URL}/api/auth/logout`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken.value}`,
@@ -49,7 +49,7 @@ async function getCurrentUser() {
 
     if (accessToken?.value) {
       const response = await fetch(
-        `${process.env.EXTERNAL_API_URL}/api/auth/me`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
         {
           method: "GET",
           credentials: "include",

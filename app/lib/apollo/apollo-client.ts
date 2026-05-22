@@ -32,6 +32,7 @@ const authLink = new SetContextLink((prevContext) => {
   const userId = getCookie("user_id");
 
   return {
+    credentials: "include",
     headers: {
       ...prevContext.headers,
       ...(token && { authorization: `Bearer ${token}` }),
@@ -45,13 +46,12 @@ const wsLink =
   typeof window !== "undefined"
     ? new GraphQLWsLink(
         createClient({
-          url: process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/graphql",
+          url: process.env.NEXT_PUBLIC_WS_COMMENT_URL!,
           connectionParams: () => {
             const token = getCookie("access_token");
             const userId = getCookie("user_id");
-
             return {
-              authorization: token ? `Bearer ${token}` : "",
+              accessToken: token || "",
               userId: userId || "",
             };
           },

@@ -21,7 +21,6 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           const response = await login({ email, password });
 
           const { data } = await response.json();
-          console.log(data);
           // Parse cookies từ Set-Cookie headers
           const cookieStore = await cookies();
           const setCookieHeader = response.headers.get("set-cookie");

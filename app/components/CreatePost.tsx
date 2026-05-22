@@ -64,7 +64,6 @@ export default function CreatePost() {
       if (selectedFiles.length > 0) {
         mediaUrls = await uploadFiles(selectedFiles);
       }
-      console.log(mediaUrls);
       if (postType !== "TEXT" && mediaUrls.length === 0) {
         alert("Vui lòng chọn file phương tiện cho loại bài viết này");
         setUploading(false);

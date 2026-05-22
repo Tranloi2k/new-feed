@@ -6,7 +6,6 @@ function getUserIdFromCookie() {
   const match = document.cookie.match(/(?:^|; )user_id=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
-
 export interface NotificationMessage {
   id: string;
   message: string;
@@ -20,11 +19,12 @@ export function useNotificationsWS() {
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
 
   useEffect(() => {
+    const WS_NOTIFICATION_URL = process.env.NEXT_PUBLIC_WS_NOTIFICATION_URL;
+    console.log(WS_NOTIFICATION_URL);
     if (!socket) {
-      const GATEWAY_URL = "ws://localhost:8080";
-      socket = io(GATEWAY_URL, {
+      socket = io(WS_NOTIFICATION_URL, {
+        path: "/socket.io",
         transports: ["websocket"],
-        path: "/notifications/socket.io",
         reconnectionAttempts: 2,
         timeout: 5000,
         withCredentials: true,

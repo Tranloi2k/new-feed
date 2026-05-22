@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { NotificationsProvider } from "../providers/NotificationsProvider";
 import { NotificationList } from "./NotificationList";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";

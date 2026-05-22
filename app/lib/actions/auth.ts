@@ -38,7 +38,7 @@ export async function logoutAction() {
 
     // Call backend logout endpoint
     if (accessToken?.value) {
-      await fetch(`${process.env.EXTERNAL_API_URL}/api/logout`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/logout`, {
         method: "POST",
         credentials: "include",
         headers: {

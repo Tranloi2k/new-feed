@@ -15,7 +15,7 @@ export const uploadFiles = async (files: File[]): Promise<string[]> => {
       throw new Error("Không tìm thấy token xác thực");
     }
 
-    const apiUrl = process.env.EXTERNAL_API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const response = await fetch(`${apiUrl}/api/media/upload`, {
       method: "POST",
       credentials: "include", // Tự động gửi cookies
