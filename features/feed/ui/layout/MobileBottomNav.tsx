@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import { Bell, Home, Plus, Search, User } from "lucide-react";
 import { cn } from "../utils/cn";
+import { requestComposerOpen } from "../utils/composer-event";
 
 const items = [
-  { icon: Home, label: "Home", active: true },
+  { icon: Home, label: "Trang chủ", active: true },
   { icon: Search, label: "Tìm", active: false },
   { icon: Plus, label: "Đăng", active: false, primary: true },
-  { icon: Bell, label: "TB", active: false },
+  { icon: Bell, label: "Thông báo", active: false },
   { icon: User, label: "Bạn", active: false },
 ];
 
@@ -17,7 +18,7 @@ export function MobileBottomNav() {
     <nav
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
-        "glass-panel border-t border-[color:var(--border)]",
+        "border-t border-[color:var(--border)] bg-[var(--surface-elevated)] backdrop-blur-xl",
         "pb-[env(safe-area-inset-bottom)]"
       )}
       aria-label="Điều hướng chính"
@@ -29,25 +30,16 @@ export function MobileBottomNav() {
             type="button"
             whileTap={{ scale: 0.9 }}
             transition={{ duration: 0.12 }}
+            onClick={item.primary ? requestComposerOpen : undefined}
             aria-label={item.label}
             aria-current={item.active ? "page" : undefined}
             className={cn(
-              "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium transition-colors",
-              item.primary
-                ? "relative -mt-5"
-                : item.active
-                  ? "text-[var(--accent)]"
-                  : "text-[var(--text-muted)]"
+              "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
+              item.active ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-muted)]",
+              item.primary && "border border-[color:var(--border-strong)] text-[var(--text-primary)]"
             )}
           >
-            {item.primary ? (
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-violet-500 text-white shadow-lg shadow-[var(--accent-glow)]">
-                <item.icon className="h-6 w-6" />
-              </span>
-            ) : (
-              <item.icon className="h-5 w-5" />
-            )}
-            {!item.primary && <span>{item.label}</span>}
+            <item.icon className="h-[22px] w-[22px]" strokeWidth={item.active ? 2.4 : 1.8} />
           </motion.button>
         ))}
       </div>

@@ -14,17 +14,19 @@ export function FeedShell({
     <div className="min-h-screen bg-[var(--background)]">
       <FeedTopBar user={user} />
 
-      <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-0 px-0 pt-[var(--header-height)] lg:grid-cols-[var(--nav-width)_1fr] lg:gap-6 lg:px-6 xl:grid-cols-[var(--nav-width)_minmax(0,1fr)_var(--aside-width)]">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-0 px-0 pt-[var(--header-height)] lg:grid-cols-[var(--nav-width)_minmax(0,1fr)] lg:gap-7 lg:px-5 xl:grid-cols-[var(--nav-width)_minmax(0,1fr)_var(--aside-width)]">
         <div className="hidden lg:block">
           <LeftNav user={user} />
         </div>
 
         <main
-          className="min-h-[calc(100vh-var(--header-height))] w-full pb-[calc(var(--bottom-nav-height)+1.5rem)] lg:pb-8"
+          className="min-h-[calc(100vh-var(--header-height))] w-full pb-[var(--bottom-nav-height)] lg:pb-8"
           role="feed"
         >
-          <div className="feed-column mx-auto w-full px-4 py-4 sm:px-5 lg:max-w-[var(--feed-max)]">
-            {children}
+          <div className="feed-column mx-auto w-full lg:max-w-[var(--feed-max)]">
+            <div className="min-h-[calc(100vh-var(--header-height))] overflow-hidden border-x border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-soft)] sm:rounded-t-[14px] sm:border-t">
+              {children}
+            </div>
           </div>
         </main>
 

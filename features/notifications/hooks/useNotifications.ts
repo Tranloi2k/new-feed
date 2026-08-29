@@ -10,6 +10,23 @@ import {
 
 let socket: Socket | null = null;
 
+function getBrowserSocketUrl(configuredUrl?: string): string | null {
+  if (!configuredUrl) return null;
+
+  try {
+    const url = new URL(configuredUrl, window.location.origin);
+    const pageIsRemote = !["localhost", "127.0.0.1"].includes(
+      window.location.hostname
+    );
+    const socketIsLocal = ["localhost", "127.0.0.1"].includes(url.hostname);
+
+    if (pageIsRemote && socketIsLocal) return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 function upsertNotification(
   list: NotificationItem[],
   item: NotificationItem
@@ -46,9 +63,10 @@ export function useNotifications() {
   }, [loadInbox]);
 
   useEffect(() => {
-    const wsUrl =
+    const wsUrl = getBrowserSocketUrl(
       process.env.NEXT_PUBLIC_WS_NOTIFICATION_URL ||
-      process.env.NEXT_PUBLIC_API_URL;
+        process.env.NEXT_PUBLIC_API_URL
+    );
     if (!wsUrl) return;
 
     if (!socket) {

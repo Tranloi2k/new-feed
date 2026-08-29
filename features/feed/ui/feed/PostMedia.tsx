@@ -12,7 +12,7 @@ export function PostMedia({ mediaUrls = [] }: { mediaUrls?: string[] | null }) {
   if (urls.length === 1) {
     const url = urls[0];
     return (
-      <div className="relative mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--border)] bg-black/5">
+      <div className="relative mt-3 overflow-hidden rounded-xl border border-[color:var(--border)] bg-black/5">
         {isVideo(url) ? (
           <video
             className="max-h-[min(70vh,560px)] w-full object-contain"

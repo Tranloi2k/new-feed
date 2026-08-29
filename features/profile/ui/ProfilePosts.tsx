@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   GetUserPostsDocument,
@@ -29,6 +29,7 @@ export function ProfilePosts({ userId }: ProfilePostsProps) {
   );
 
   const observerTarget = useRef<HTMLDivElement>(null);
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -54,7 +55,7 @@ export function ProfilePosts({ userId }: ProfilePostsProps) {
 
   const formatTime = (timestamp: string) => {
     const diff = Math.floor(
-      (Date.now() - new Date(timestamp).getTime()) / 1000
+      (now - new Date(timestamp).getTime()) / 1000
     );
     if (diff < 60) return "Vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút`;
@@ -66,9 +67,13 @@ export function ProfilePosts({ userId }: ProfilePostsProps) {
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
-        Bài viết
-      </h2>
+      <div className="grid grid-cols-2 border-b border-[color:var(--border)]">
+        <h2 className="relative py-4 text-center text-sm font-semibold text-[var(--text-primary)]">
+          Bài viết
+          <span className="absolute inset-x-8 bottom-0 h-0.5 bg-[var(--text-primary)]" />
+        </h2>
+        <span className="py-4 text-center text-sm text-[var(--text-muted)]">Phản hồi</span>
+      </div>
 
       {loading && !data && <FeedLoadMoreSpinner />}
 

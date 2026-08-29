@@ -10,10 +10,6 @@ const nextConfig: NextConfig = {
       { source: "/api/auth/login", destination: `${gatewayUrl}/api/auth/login` },
       { source: "/api/auth/signup", destination: `${gatewayUrl}/api/auth/signup` },
       { source: "/api/auth/logout", destination: `${gatewayUrl}/api/auth/logout` },
-      {
-        source: "/api/auth/validate-token",
-        destination: `${gatewayUrl}/api/auth/validate-token`,
-      },
       { source: "/api/auth/me", destination: `${gatewayUrl}/api/auth/me` },
       {
         source: "/api/users/:id/profile",

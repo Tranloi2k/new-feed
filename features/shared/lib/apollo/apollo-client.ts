@@ -9,6 +9,30 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from "graphql-ws";
 
+function getBrowserWebSocketUrl(configuredUrl?: string): string | null {
+  if (typeof window === "undefined" || !configuredUrl) return null;
+
+  try {
+    const url = new URL(configuredUrl, window.location.origin);
+    const pageIsRemote = !["localhost", "127.0.0.1"].includes(
+      window.location.hostname
+    );
+    const socketIsLocal = ["localhost", "127.0.0.1"].includes(url.hostname);
+
+    // A localhost socket in a public/forwarded browser points at the viewer's
+    // own machine, not at this application server.
+    if (pageIsRemote && socketIsLocal) return null;
+
+    if (window.location.protocol === "https:" && url.protocol === "ws:") {
+      url.protocol = "wss:";
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 /** HttpOnly cookie is sent via same-origin rewrites (localhost:3000 → gateway). */
 const authLink = new SetContextLink((prevContext) => ({
   credentials: "include",
@@ -39,44 +63,17 @@ const httpSplitLink = ApolloLink.split(
   postHttpLink
 );
 
-let wsTokenCache: string | null | undefined;
-
-async function fetchWsAccessToken(): Promise<string | null> {
-  if (wsTokenCache !== undefined) return wsTokenCache;
-  try {
-    const res = await fetch("/api/auth/access-token", { credentials: "include" });
-    if (!res.ok) {
-      wsTokenCache = null;
-      return null;
-    }
-    const data = (await res.json()) as { token?: string };
-    wsTokenCache = data.token ?? null;
-    return wsTokenCache;
-  } catch {
-    wsTokenCache = null;
-    return null;
-  }
-}
-
-function buildCommentWsUrl(token: string | null): string {
-  const base = process.env.NEXT_PUBLIC_WS_COMMENT_URL || "";
-  if (!token) return base;
-  const separator = base.includes("?") ? "&" : "?";
-  return `${base}${separator}access_token=${encodeURIComponent(token)}`;
-}
+const commentWebSocketUrl = getBrowserWebSocketUrl(
+  process.env.NEXT_PUBLIC_WS_COMMENT_URL
+);
 
 const wsLink =
-  typeof window !== "undefined" && process.env.NEXT_PUBLIC_WS_COMMENT_URL
+  commentWebSocketUrl
     ? new GraphQLWsLink(
         createClient({
-          url: async () => {
-            const token = await fetchWsAccessToken();
-            return buildCommentWsUrl(token);
-          },
-          connectionParams: async () => {
-            const token = await fetchWsAccessToken();
-            return { accessToken: token || "" };
-          },
+          // The browser sends the HttpOnly access-token cookie during the
+          // WebSocket handshake. Never expose the JWT to client JavaScript.
+          url: commentWebSocketUrl,
         })
       )
     : null;

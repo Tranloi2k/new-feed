@@ -3,24 +3,26 @@
 import { authenticate } from "@/features/auth/actions/auth";
 import Link from "next/link";
 import { useActionState } from "react";
-import { APP_NAME, APP_TAGLINE } from "@/features/auth/constants";
+import {
+  APP_NAME,
+  APP_TAGLINE,
+} from "@/features/auth/constants";
 
 export default function LoginForm() {
   const [state, formAction, isPending] = useActionState(authenticate, undefined);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-12">
+      <div className="w-full max-w-[420px] space-y-8">
         <div>
-          <h2 className="text-center text-4xl font-bold text-blue-600 mb-2">
-            {APP_NAME}
-          </h2>
-          <p className="text-center text-lg text-gray-600 dark:text-gray-400">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-[14px] bg-[var(--text-primary)] text-sm font-black tracking-[-0.08em] text-[var(--surface)]">NF</div>
+          <h2 className="mb-2 text-center text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">Đăng nhập vào {APP_NAME}</h2>
+          <p className="text-center text-sm text-[var(--text-secondary)]">
             {APP_TAGLINE}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
+        <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--surface)] p-7 shadow-[var(--shadow-soft)]">
           <form action={formAction} className="space-y-4">
             {state?.error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
@@ -36,7 +38,7 @@ export default function LoginForm() {
                 autoComplete="email"
                 placeholder="Email hoặc tên đăng nhập"
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -48,24 +50,24 @@ export default function LoginForm() {
                 autoComplete="current-password"
                 placeholder="Mật khẩu"
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-[var(--text-primary)] py-3 font-semibold text-[var(--surface)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isPending ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
-            <hr className="border-gray-300 dark:border-gray-600" />
+            <hr className="border-[color:var(--border)]" />
 
             <div className="text-center">
               <Link
                 href="/signup"
-                className="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                className="inline-block rounded-xl border border-[color:var(--border-strong)] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-muted)]"
               >
                 Tạo tài khoản mới
               </Link>

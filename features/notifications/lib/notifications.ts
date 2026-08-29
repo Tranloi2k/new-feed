@@ -16,21 +16,6 @@ export interface NotificationsPage {
   nextCursor: string | null;
 }
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
-  return null;
-}
-
-function authHeaders(): HeadersInit {
-  const token = getCookie("access_token");
-  return {
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
-
 export async function fetchNotifications(
   limit = 20,
   cursor?: string
@@ -42,7 +27,6 @@ export async function fetchNotifications(
     `${getApiUrl()}/api/notifications?${params}`,
     {
       credentials: "include",
-      headers: authHeaders(),
     }
   );
 
@@ -59,7 +43,6 @@ export async function fetchUnreadCount(): Promise<number> {
     `${getApiUrl()}/api/notifications/unread-count`,
     {
       credentials: "include",
-      headers: authHeaders(),
     }
   );
 
@@ -77,7 +60,6 @@ export async function markAllNotificationsRead(): Promise<void> {
     {
       method: "POST",
       credentials: "include",
-      headers: authHeaders(),
     }
   );
 }

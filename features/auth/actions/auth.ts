@@ -70,6 +70,10 @@ export async function register(
       ...(fullName ? { fullName } : {}),
     });
 
+    // Signup issues an API session, while NextAuth signs in once more below.
+    // Revoke the temporary session so it does not remain active for 30 days.
+    await backendLogout();
+
     await signIn("credentials", {
       email,
       password,

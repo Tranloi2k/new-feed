@@ -8,7 +8,7 @@ export function FeedError({ onRetry }: { onRetry?: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-surface flex flex-col items-center gap-4 p-8 text-center"
+      className="flex flex-col items-center gap-4 border-b border-[color:var(--border)] p-10 text-center"
     >
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
         <Wifi className="h-7 w-7" />
@@ -25,7 +25,7 @@ export function FeedError({ onRetry }: { onRetry?: () => void }) {
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white"
+        className="inline-flex items-center gap-2 rounded-lg bg-[var(--text-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--surface)]"
         >
           <RefreshCw className="h-4 w-4" />
           Thử lại
@@ -40,9 +40,9 @@ export function FeedEmpty() {
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="card-surface flex flex-col items-center gap-4 p-12 text-center"
+      className="flex flex-col items-center gap-4 p-12 text-center"
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--accent-soft)] text-[var(--accent)]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--text-primary)]">
         <Newspaper className="h-8 w-8" />
       </div>
       <div>
@@ -64,7 +64,7 @@ export function FeedEndMessage() {
       animate={{ opacity: 1 }}
       className="py-8 text-center text-sm text-[var(--text-muted)]"
     >
-      Bạn đã xem hết bài viết ✨
+      Bạn đã xem hết bài viết.
     </motion.p>
   );
 }

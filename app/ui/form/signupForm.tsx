@@ -9,18 +9,17 @@ export default function SignupForm() {
   const [state, formAction, isPending] = useActionState(register, undefined);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-12">
+      <div className="w-full max-w-[440px] space-y-8">
         <div>
-          <h2 className="text-center text-4xl font-bold text-blue-600 mb-2">
-            {APP_NAME}
-          </h2>
-          <p className="text-center text-lg text-gray-600 dark:text-gray-400">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-[14px] bg-[var(--text-primary)] text-sm font-black tracking-[-0.08em] text-[var(--surface)]">NF</div>
+          <h2 className="mb-2 text-center text-2xl font-semibold tracking-[-0.04em] text-[var(--text-primary)]">Tham gia {APP_NAME}</h2>
+          <p className="text-center text-sm text-[var(--text-secondary)]">
             {APP_TAGLINE}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
+        <div className="rounded-2xl border border-[color:var(--border)] bg-[var(--surface)] p-7 shadow-[var(--shadow-soft)]">
           <form action={formAction} className="space-y-4">
             {state?.error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
@@ -35,7 +34,7 @@ export default function SignupForm() {
                 type="text"
                 autoComplete="name"
                 placeholder="Họ và tên (tuỳ chọn)"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -47,7 +46,7 @@ export default function SignupForm() {
                 autoComplete="username"
                 placeholder="Tên đăng nhập"
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -59,7 +58,7 @@ export default function SignupForm() {
                 autoComplete="email"
                 placeholder="Email"
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -72,7 +71,7 @@ export default function SignupForm() {
                 placeholder="Mật khẩu"
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -85,21 +84,21 @@ export default function SignupForm() {
                 placeholder="Xác nhận mật khẩu"
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-[var(--text-primary)] py-3 font-semibold text-[var(--surface)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isPending ? "Đang đăng ký..." : "Đăng ký"}
             </button>
 
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-center text-sm text-[var(--text-secondary)]">
               Đã có tài khoản?{" "}
-              <Link href="/login" className="text-blue-600 hover:underline font-medium">
+              <Link href="/login" className="font-semibold text-[var(--text-primary)] hover:underline">
                 Đăng nhập
               </Link>
             </p>

@@ -1,14 +1,13 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   GetNewsFeedDocument,
   type GetNewsFeedQuery,
 } from "@/features/feed/lib/documents";
 import { POST_REFRESH_THRESHOLD } from "@/features/feed/constants";
-import { StoriesRow } from "./feed/StoriesRow";
 import { Composer } from "./feed/Composer";
 import { PostCard } from "./feed/PostCard";
 import { FeedSkeletons } from "./feed/FeedSkeletons";
@@ -28,16 +27,16 @@ export function NewsFeed() {
     });
 
   const observerTarget = useRef<HTMLDivElement>(null);
-  const lastVisibleTimeRef = useRef<number>(Date.now());
+  const lastVisibleTimeRef = useRef<number>(0);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (data?.getNewsFeed.hasMore && !loading) {
       fetchMore({
         variables: { cursor: data.getNewsFeed.nextCursor },
       });
       setCursor(data.getNewsFeed.nextCursor ?? null);
     }
-  };
+  }, [data, fetchMore, loading]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -75,7 +74,7 @@ export function NewsFeed() {
     return () => {
       if (target) observer.unobserve(target);
     };
-  }, [data, loading]);
+  }, [data, loading, loadMore]);
 
   const formatTime = (timestamp: string) => {
     const now = new Date();
@@ -98,7 +97,15 @@ export function NewsFeed() {
 
   return (
     <>
-      <StoriesRow />
+      <div className="sticky top-[var(--header-height)] z-30 grid grid-cols-2 border-b border-[color:var(--border)] bg-[var(--surface-elevated)] backdrop-blur-xl">
+        <button className="relative h-14 text-sm font-semibold text-[var(--text-primary)]">
+          Dành cho bạn
+          <span className="absolute inset-x-7 bottom-0 h-0.5 rounded-full bg-[var(--text-primary)]" />
+        </button>
+        <button className="h-14 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]">
+          Đang theo dõi
+        </button>
+      </div>
       <Composer />
 
       {isInitialLoading && <FeedSkeletons />}

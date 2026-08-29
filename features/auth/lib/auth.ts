@@ -1,8 +1,9 @@
 import { getApiUrl } from "@/features/shared/lib/env";
 import {
-  clearAccessTokenCookie,
+  clearAuthCookies,
   getAccessToken,
-  syncAccessTokenFromResponse,
+  getRefreshToken,
+  syncAuthCookiesFromResponse,
 } from "./cookies";
 
 export type AuthUser = {
@@ -38,7 +39,7 @@ async function login(params: { email: string; password: string }) {
   });
 
   const body = await parseAuthResponse(response);
-  await syncAccessTokenFromResponse(response);
+  await syncAuthCookiesFromResponse(response);
   return body;
 }
 
@@ -56,19 +57,24 @@ async function signup(params: {
   });
 
   const body = await parseAuthResponse(response);
-  await syncAccessTokenFromResponse(response);
+  await syncAuthCookiesFromResponse(response);
   return body;
 }
 
 async function logout() {
   try {
     const accessToken = await getAccessToken();
+    const refreshToken = await getRefreshToken();
 
-    if (accessToken) {
+    if (accessToken || refreshToken) {
       await fetch(`${getApiUrl()}/api/auth/logout`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+          Cookie: [
+            accessToken && `access_token=${accessToken}`,
+            refreshToken && `refresh_token=${refreshToken}`,
+          ].filter(Boolean).join("; "),
           "Content-Type": "application/json",
         },
         cache: "no-store",
@@ -77,7 +83,7 @@ async function logout() {
   } catch (error) {
     console.error("Backend logout failed:", error);
   } finally {
-    await clearAccessTokenCookie();
+    await clearAuthCookies();
   }
 }
 

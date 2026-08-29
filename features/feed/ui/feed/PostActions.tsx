@@ -65,29 +65,14 @@ export function PostActions({
   ] as const;
 
   return (
-    <div className="mt-3 border-t border-[color:var(--border)] pt-2">
+    <div className="mt-3">
       {(displayLikes > 0 || commentCount > 0 || shareCount > 0) && (
-        <div className="mb-2 flex items-center justify-between px-1 text-xs text-[var(--text-secondary)]">
-          <span className="flex items-center gap-1.5">
-            {displayLikes > 0 && (
-              <>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent)] text-[10px] text-white">
-                  ♥
-                </span>
-                <span>{displayLikes.toLocaleString("vi-VN")}</span>
-              </>
-            )}
-          </span>
-          <span className="flex gap-3">
-            {commentCount > 0 && (
-              <span>{commentCount} bình luận</span>
-            )}
-            {shareCount > 0 && <span>{shareCount} chia sẻ</span>}
-          </span>
-        </div>
+        <p className="mb-2 text-xs text-[var(--text-muted)]">
+          {[displayLikes > 0 && `${displayLikes.toLocaleString("vi-VN")} lượt thích`, commentCount > 0 && `${commentCount} phản hồi`, shareCount > 0 && `${shareCount} lượt chia sẻ`].filter(Boolean).join(" · ")}
+        </p>
       )}
 
-      <div className="grid grid-cols-4 gap-1">
+      <div className="flex items-center gap-1">
         {actions.map((action) => (
           <motion.button
             key={action.key}
@@ -95,8 +80,9 @@ export function PostActions({
             whileTap={{ scale: 0.94 }}
             transition={{ duration: 0.12 }}
             onClick={action.onClick}
+            aria-label={action.label}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors duration-200",
+              "flex items-center justify-center gap-1.5 rounded-full p-2 text-sm font-medium transition-colors duration-150",
               "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               action.active && "text-[var(--accent)]"
@@ -108,9 +94,8 @@ export function PostActions({
                 action.key === "like" && action.active && "fill-[var(--accent)]"
               )}
             />
-            <span className="hidden sm:inline">{action.label}</span>
             {action.count != null && action.count > 0 && (
-              <span className="tabular-nums text-xs opacity-80">
+              <span className="tabular-nums text-[13px] opacity-80">
                 {action.count}
               </span>
             )}

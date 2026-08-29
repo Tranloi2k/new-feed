@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@apollo/client/react";
 import { useSession } from "next-auth/react";
@@ -9,6 +9,7 @@ import { CreatePostDocument } from "@/features/feed/lib/documents";
 import { uploadFiles } from "@/app/lib/actions/uploadMedia";
 import { Avatar } from "../primitives/Avatar";
 import { cn } from "../utils/cn";
+import { OPEN_COMPOSER_EVENT } from "../utils/composer-event";
 
 export function Composer() {
   const { data: session } = useSession();
@@ -19,10 +20,12 @@ export function Composer() {
   const [postType, setPostType] = useState<"TEXT" | "IMAGE" | "VIDEO" | "LINK">("TEXT");
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<{ url: string; type: string }[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showLocation, setShowLocation] = useState(false);
 
   const userName = session?.user?.name || session?.user?.email || "Bạn";
 
-  const [createPost, { loading, error }] = useMutation(CreatePostDocument, {
+  const [createPost, { loading, error: mutationError }] = useMutation(CreatePostDocument, {
     context: { credentials: "include" },
     refetchQueries: ["GetNewsFeed"],
     onCompleted: (data) => {
@@ -32,10 +35,52 @@ export function Composer() {
         setSelectedFiles([]);
         setPreviews([]);
         setPostType("TEXT");
+        setShowLocation(false);
         setShowModal(false);
       }
     },
   });
+
+  const openTextComposer = () => {
+    setPostType("TEXT");
+    setSubmitError(null);
+    setShowModal(true);
+  };
+
+  const closeComposer = () => {
+    if (loading || uploading) return;
+    setPostType("TEXT");
+    setSelectedFiles([]);
+    setPreviews([]);
+    setLocation("");
+    setSubmitError(null);
+    setShowLocation(false);
+    setShowModal(false);
+  };
+
+  useEffect(() => {
+    const openComposer = () => {
+      setPostType("TEXT");
+      setSubmitError(null);
+      setShowModal(true);
+    };
+
+    window.addEventListener(OPEN_COMPOSER_EVENT, openComposer);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("compose") === "1") {
+      openComposer();
+      params.delete("compose");
+      const query = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`
+      );
+    }
+
+    return () => window.removeEventListener(OPEN_COMPOSER_EVENT, openComposer);
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -52,6 +97,7 @@ export function Composer() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     setUploading(true);
     try {
       let mediaUrls: string[] = [];
@@ -59,10 +105,12 @@ export function Composer() {
         mediaUrls = await uploadFiles(selectedFiles);
       }
       if (postType !== "TEXT" && mediaUrls.length === 0) {
-        alert("Vui lòng chọn file phương tiện");
+        setSubmitError(
+          `Vui lòng chọn ${postType === "VIDEO" ? "video" : "ảnh"} để đăng`
+        );
         return;
       }
-      await createPost({
+      const result = await createPost({
         variables: {
           input: {
             content: content || null,
@@ -72,59 +120,58 @@ export function Composer() {
           },
         },
       });
+
+      if (!result.data?.createPost.success) {
+        throw new Error(
+          result.data?.createPost.message || "Không thể đăng bài lúc này"
+        );
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Lỗi không xác định";
-      alert("Lỗi: " + message);
+      setSubmitError(message);
     } finally {
       setUploading(false);
     }
   };
 
-  const quickActions = [
-    { icon: ImageIcon, label: "Ảnh", type: "IMAGE" as const, color: "text-emerald-500" },
-    { icon: Video, label: "Video", type: "VIDEO" as const, color: "text-rose-500" },
-    { icon: MapPin, label: "Vị trí", type: "TEXT" as const, color: "text-amber-500" },
-  ];
-
   return (
     <>
       <motion.section
         layout
-        className="card-surface sticky top-[calc(var(--header-height)+0.75rem)] z-30 mb-4 p-4 sm:p-5"
+        className="border-b border-[color:var(--border)] bg-[var(--surface)] px-4 py-4 sm:px-5"
         aria-label="Tạo bài viết"
       >
-        <div className="flex gap-3">
-          <Avatar name={userName} size="lg" />
+        <div className="flex items-center gap-3">
+          <Avatar name={userName} size="md" />
           <button
             type="button"
-            onClick={() => setShowModal(true)}
+            onClick={openTextComposer}
             className={cn(
-              "flex-1 rounded-full border border-[color:var(--border)] bg-[var(--surface-muted)] px-5 py-3 text-left text-[15px]",
-              "text-[var(--text-muted)] transition-all duration-200",
-              "hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--text-secondary)]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              "min-w-0 flex-1 py-2 text-left text-[15px] text-[var(--text-muted)]",
+              "transition-colors hover:text-[var(--text-secondary)] focus-visible:outline-none"
             )}
           >
-            Bạn đang nghĩ gì, {userName.split(" ")[0]}?
+            Bắt đầu một cuộc trò chuyện...
           </button>
-        </div>
-
-        <div className="mt-3 flex items-center justify-around border-t border-[color:var(--border)] pt-3">
-          {quickActions.map((action) => (
-            <motion.button
-              key={action.label}
-              type="button"
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setPostType(action.type);
-                setShowModal(true);
-              }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-            >
-              <action.icon className={cn("h-5 w-5", action.color)} />
-              <span className="hidden sm:inline">{action.label}</span>
-            </motion.button>
-          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setPostType("IMAGE");
+              setSubmitError(null);
+              setShowModal(true);
+            }}
+            className="rounded-full p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            aria-label="Thêm ảnh"
+          >
+            <ImageIcon className="h-[19px] w-[19px]" />
+          </button>
+          <button
+            type="button"
+            onClick={openTextComposer}
+            className="rounded-lg border border-[color:var(--border-strong)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-muted)]"
+          >
+            Đăng
+          </button>
         </div>
       </motion.section>
 
@@ -135,7 +182,7 @@ export function Composer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-            onClick={() => setShowModal(false)}
+            onClick={closeComposer}
           >
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.98 }}
@@ -143,15 +190,15 @@ export function Composer() {
               exit={{ opacity: 0, y: 24, scale: 0.98 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[92vh] w-full max-w-lg overflow-hidden rounded-t-[var(--radius-xl)] border border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] sm:rounded-[var(--radius-xl)]"
+              className="max-h-[92vh] w-full max-w-[620px] overflow-hidden rounded-t-2xl border border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] sm:rounded-2xl"
             >
               <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  Tạo bài viết
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                  Bài viết mới
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={closeComposer}
                   className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--surface-muted)]"
                   aria-label="Đóng"
                 >
@@ -169,41 +216,70 @@ export function Composer() {
                     rows={5}
                     autoFocus
                     className={cn(
-                      "flex-1 resize-none bg-transparent text-[15px] leading-relaxed text-[var(--text-primary)]",
+                      "flex-1 resize-none bg-transparent text-base leading-relaxed text-[var(--text-primary)]",
                       "placeholder:text-[var(--text-muted)] focus:outline-none"
                     )}
                   />
                 </div>
 
-                <div className="mt-4">
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Thêm vị trí..."
-                    className="w-full rounded-[var(--radius-md)] border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-2.5 text-sm focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]"
-                  />
+                <div className="ml-[52px] mt-3 flex flex-wrap items-center gap-1 border-t border-[color:var(--border)] pt-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                    <ImageIcon className="h-[18px] w-[18px]" />
+                    <span>Ảnh</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]">
+                    <Video className="h-[18px] w-[18px]" />
+                    <span>Video</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="video/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowLocation((value) => !value)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      showLocation
+                        ? "bg-[var(--surface-muted)] text-[var(--text-primary)]"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                    )}
+                  >
+                    <MapPin className="h-[18px] w-[18px]" />
+                    <span>Vị trí</span>
+                  </button>
+                  {selectedFiles.length > 0 && (
+                    <span className="ml-auto text-xs text-[var(--text-muted)]">
+                      {selectedFiles.length} tệp đã chọn
+                    </span>
+                  )}
                 </div>
 
-                {(postType === "IMAGE" || postType === "VIDEO") && (
-                  <div className="mt-4">
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-lg)] border-2 border-dashed border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-8 transition-colors hover:border-[var(--accent)]">
-                      <input
-                        type="file"
-                        multiple
-                        accept={postType === "IMAGE" ? "image/*" : "video/*"}
-                        onChange={handleFileSelect}
-                        className="hidden"
-                      />
-                      <span className="text-sm font-medium text-[var(--text-secondary)]">
-                        Chọn {postType === "IMAGE" ? "ảnh" : "video"} để tải lên
-                      </span>
-                    </label>
+                {showLocation && (
+                  <div className="ml-[52px] mt-3">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Thêm vị trí..."
+                      autoFocus
+                      className="w-full rounded-lg border border-[color:var(--border)] bg-[var(--surface-muted)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
+                    />
                   </div>
                 )}
 
                 {previews.length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="ml-[52px] mt-4 grid grid-cols-2 gap-2">
                     {previews.map((preview, index) => (
                       <div
                         key={index}
@@ -224,9 +300,9 @@ export function Composer() {
                   </div>
                 )}
 
-                {error && (
+                {(submitError || mutationError) && (
                   <p className="mt-4 rounded-[var(--radius-md)] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400">
-                    {error.message}
+                    {submitError || mutationError?.message}
                   </p>
                 )}
 
@@ -234,7 +310,7 @@ export function Composer() {
                   type="submit"
                   disabled={loading || uploading || (!content.trim() && !selectedFiles.length)}
                   whileTap={{ scale: 0.98 }}
-                  className="mt-5 w-full rounded-full bg-gradient-to-r from-[var(--accent)] to-violet-500 py-3 font-semibold text-white shadow-lg shadow-[var(--accent-glow)] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-5 w-full rounded-xl bg-[var(--text-primary)] py-3 font-semibold text-[var(--surface)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {uploading
                     ? "Đang tải lên..."

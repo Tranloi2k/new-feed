@@ -1,114 +1,62 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Hash, TrendingUp, UserPlus } from "lucide-react";
+import { Search } from "lucide-react";
 import { Avatar } from "../primitives/Avatar";
-import { cn } from "../utils/cn";
-
-const trendingTags = [
-  { tag: "#NextJS", posts: "12.4K" },
-  { tag: "#AI2026", posts: "8.2K" },
-  { tag: "#StartupVN", posts: "5.1K" },
-  { tag: "#DesignSystems", posts: "3.8K" },
-];
 
 const suggestedUsers = [
-  { name: "Mai Linh", username: "mailinh", online: true },
-  { name: "Hoàng Dev", username: "hoangdev", online: true },
-  { name: "Sarah UI", username: "sarahui", online: false },
-  { name: "Khoa Product", username: "khoapm", online: true },
+  { name: "Mai Linh", username: "mailinh", note: "Thiết kế sản phẩm" },
+  { name: "Hoàng Nguyễn", username: "hoangdev", note: "Frontend engineer" },
+  { name: "Khoa Trần", username: "khoapm", note: "Product & indie maker" },
 ];
+
+const topics = ["Thiết kế", "Công nghệ", "Chuyện đi làm"];
 
 export function RightPanel() {
   return (
     <aside className="hidden xl:block">
-      <div className="sticky top-[calc(var(--header-height)+1rem)] space-y-4">
-        <section className="card-surface overflow-hidden p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[var(--accent)]" />
-            <h3 className="font-semibold text-[var(--text-primary)]">
-              Xu hướng
-            </h3>
-          </div>
-          <ul className="space-y-3">
-            {trendingTags.map((item, i) => (
-              <motion.li
-                key={item.tag}
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.2 }}
-              >
-                <button
-                  type="button"
-                  className="group w-full text-left transition-colors hover:text-[var(--accent)]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Hash className="h-3.5 w-3.5 text-[var(--text-muted)] group-hover:text-[var(--accent)]" />
-                    <span className="font-semibold text-[var(--text-primary)]">
-                      {item.tag}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 pl-5 text-xs text-[var(--text-secondary)]">
-                    {item.posts} bài viết
-                  </p>
-                </button>
-              </motion.li>
-            ))}
-          </ul>
-        </section>
+      <div className="sticky top-[calc(var(--header-height)+1rem)] space-y-5">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+          <input
+            type="search"
+            placeholder="Tìm kiếm"
+            className="h-12 w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface)] pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
+          />
+        </label>
 
-        <section className="card-surface p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--text-primary)]">
-              Gợi ý theo dõi
-            </h3>
-            <button
-              type="button"
-              className="text-xs font-medium text-[var(--accent)] hover:underline"
-            >
-              Xem tất cả
-            </button>
+        <section className="rounded-xl border border-[color:var(--border)] bg-[var(--surface)] p-5">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Gợi ý cho bạn</h2>
+            <button type="button" className="text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Xem thêm</button>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {suggestedUsers.map((person) => (
-              <li
-                key={person.username}
-                className="flex items-center justify-between gap-2"
-              >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <Avatar
-                    name={person.name}
-                    size="md"
-                    showOnline={person.online}
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-                      {person.name}
-                    </p>
-                    <p className="truncate text-xs text-[var(--text-secondary)]">
-                      @{person.username}
-                    </p>
-                  </div>
+              <li key={person.username} className="flex items-center gap-3">
+                <Avatar name={person.name} size="md" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{person.name}</p>
+                  <p className="truncate text-xs text-[var(--text-muted)]">{person.note}</p>
                 </div>
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.95 }}
-                  className={cn(
-                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                    "bg-[var(--text-primary)] text-[var(--surface)] hover:opacity-90"
-                  )}
-                >
-                  <UserPlus className="mr-1 inline h-3 w-3" />
-                  Theo
-                </motion.button>
+                <button type="button" className="rounded-lg bg-[var(--text-primary)] px-3.5 py-2 text-xs font-semibold text-[var(--surface)] transition-opacity hover:opacity-80">
+                  Theo dõi
+                </button>
               </li>
             ))}
           </ul>
         </section>
 
-        <p className="px-2 text-xs leading-relaxed text-[var(--text-muted)]">
-          © 2026 NewFeed · Điều khoản · Quyền riêng tư · Trợ giúp
-        </p>
+        <section className="px-1">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-[var(--text-muted)]">Chủ đề hôm nay</p>
+          <div className="flex flex-wrap gap-2">
+            {topics.map((topic) => (
+              <button key={topic} type="button" className="rounded-full border border-[color:var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]">
+                {topic}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <p className="px-1 text-[11px] leading-5 text-[var(--text-muted)]">© 2026 NewFeed · Quyền riêng tư · Điều khoản</p>
       </div>
     </aside>
   );

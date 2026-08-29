@@ -33,7 +33,7 @@ export function Avatar({
     <div className={cn("relative shrink-0", className)}>
       <div
         className={cn(
-          "relative overflow-hidden rounded-full ring-2 ring-[color:var(--border)] bg-gradient-to-br from-[var(--accent)] to-violet-500 font-semibold text-white flex items-center justify-center",
+          "relative flex items-center justify-center overflow-hidden rounded-full border border-[color:var(--border)] bg-[#363634] font-semibold text-white",
           sizes[size]
         )}
       >

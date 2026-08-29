@@ -8,16 +8,17 @@ declare module "next-auth" {
   }
 }
 
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
+const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
   session: {
     strategy: "jwt",
     maxAge: SESSION_MAX_AGE,
-    updateAge: 12 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
   jwt: {
     maxAge: SESSION_MAX_AGE,

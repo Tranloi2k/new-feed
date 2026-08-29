@@ -11,8 +11,21 @@ export type UserProfile = {
   followersCount: number;
   followingCount: number;
   isFollowing: boolean;
+  followRequested: boolean;
   isOwnProfile: boolean;
 };
+
+export type FollowState = {
+  isFollowing: boolean;
+  followRequested: boolean;
+  followersCount: number;
+  followingCount: number;
+};
+
+export type FollowRequestUser = Pick<
+  UserProfile,
+  "id" | "username" | "fullName" | "avatarUrl" | "bio"
+>;
 
 function authHeaders(serverToken?: string): HeadersInit {
   if (serverToken) {
@@ -60,20 +73,46 @@ export async function fetchProfileById(
   return parseJson<UserProfile>(response);
 }
 
-export async function followUser(userId: number): Promise<void> {
+export async function followUser(userId: number): Promise<FollowState> {
   const response = await fetch(`${getApiUrl()}/api/users/${userId}/follow`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
-  await parseJson(response);
+  return parseJson<FollowState>(response);
 }
 
-export async function unfollowUser(userId: number): Promise<void> {
+export async function unfollowUser(userId: number): Promise<FollowState> {
   const response = await fetch(`${getApiUrl()}/api/users/${userId}/follow`, {
     method: "DELETE",
     credentials: "include",
   });
+  const data = await parseJson<FollowState>(response);
+  return { ...data, isFollowing: false, followRequested: false };
+}
+
+export async function fetchFollowRequests(): Promise<FollowRequestUser[]> {
+  const response = await fetch(`${getApiUrl()}/api/users/me/follow-requests`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  const data = await parseJson<{ users: FollowRequestUser[] }>(response);
+  return data.users;
+}
+
+export async function acceptFollowRequest(userId: number): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/users/me/follow-requests/${userId}/accept`,
+    { method: "POST", credentials: "include" }
+  );
+  await parseJson(response);
+}
+
+export async function rejectFollowRequest(userId: number): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/users/me/follow-requests/${userId}`,
+    { method: "DELETE", credentials: "include" }
+  );
   await parseJson(response);
 }
 
@@ -81,6 +120,7 @@ export async function updateMyProfile(data: {
   fullName?: string;
   bio?: string;
   avatarUrl?: string;
+  isPrivate?: boolean;
 }): Promise<UserProfile> {
   const response = await fetch(`${getApiUrl()}/api/users/me/profile`, {
     method: "PATCH",

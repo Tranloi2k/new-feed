@@ -13,6 +13,9 @@ Copy `.env.example` to `.env.local`:
 - `NEXT_PUBLIC_WS_NOTIFICATION_URL` — `http://localhost:8080` (Socket.IO path: `/notifications/socket.io`)
 
 Identity comes from the HttpOnly `access_token` cookie set by the auth service. Do not set `user_id` in the browser.
+For Kubernetes deployments where the frontend and API use sibling subdomains,
+set the server-only `AUTH_COOKIE_DOMAIN` to their shared parent domain (for
+example `.example.com`) so direct WebSocket handshakes also receive the cookie.
 
 ## Project structure
 

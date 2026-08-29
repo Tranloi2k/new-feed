@@ -83,39 +83,37 @@ export function PostCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="card-surface mb-4 overflow-hidden"
+      className="overflow-hidden border-b border-[color:var(--border)] bg-[var(--surface)]"
       role="article"
     >
-      <div className="p-4 sm:p-5">
+      <div className="px-4 py-5 sm:px-5">
         <header className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             {profileHref ? (
               <Link href={profileHref} className="shrink-0">
-                <Avatar src={avatarUrl} name={author} size="lg" />
+                <Avatar src={avatarUrl} name={author} size="md" />
               </Link>
             ) : (
-              <Avatar src={avatarUrl} name={author} size="lg" />
+              <Avatar src={avatarUrl} name={author} size="md" />
             )}
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 leading-none">
                 {profileHref ? (
                   <Link href={profileHref}
-                    className="truncate font-semibold text-[15px] leading-tight text-[var(--text-primary)] hover:underline"
+                    className="truncate font-semibold text-[15px] text-[var(--text-primary)] hover:underline"
                   >
                     {author}
                   </Link>
                 ) : (
-                  <h3 className="truncate font-semibold text-[15px] leading-tight text-[var(--text-primary)]">
+                  <h3 className="truncate font-semibold text-[15px] text-[var(--text-primary)]">
                     {author}
                   </h3>
                 )}
                 {verified && <VerifiedBadge />}
               </div>
-              <p className="truncate text-sm text-[var(--text-secondary)]">
-                {username ? `@${username}` : time}
-                {username && (
-                  <span className="text-[var(--text-muted)]"> · {time}</span>
-                )}
+              <p className="mt-1 truncate text-sm text-[var(--text-muted)]">
+                {username ? `@${username}` : ""}
+                <span>{username ? " · " : ""}{time}</span>
               </p>
             </div>
           </div>
@@ -127,7 +125,7 @@ export function PostCard({
         {content && (
           <div
             className={cn(
-              "mt-3 text-[15px] leading-relaxed text-[var(--text-primary)]",
+              "mt-3 pl-[52px] text-[15px] leading-[1.55] text-[var(--text-primary)]",
               "whitespace-pre-wrap break-words"
             )}
           >
@@ -144,15 +142,16 @@ export function PostCard({
           </div>
         )}
 
-        <PostMedia mediaUrls={mediaUrls ?? []} />
-
-        <PostActions
-          likeCount={likeCount}
-          commentCount={commentCount}
-          shareCount={shareCount}
-          commentsOpen={commentsOpen}
-          onComment={() => setCommentsOpen((v) => !v)}
-        />
+        <div className="pl-[52px]">
+          <PostMedia mediaUrls={mediaUrls ?? []} />
+          <PostActions
+            likeCount={likeCount}
+            commentCount={commentCount}
+            shareCount={shareCount}
+            commentsOpen={commentsOpen}
+            onComment={() => setCommentsOpen((v) => !v)}
+          />
+        </div>
       </div>
 
       <AnimatePresence>
