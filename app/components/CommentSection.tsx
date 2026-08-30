@@ -170,6 +170,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   email: session.user.email || "",
                   avatarUrl: session.user.image || "",
                 },
+                // The cache entry this is written into selects replies, so the
+                // optimistic comment has to carry the field too.
+                replies: [],
               },
             },
           })
@@ -192,11 +195,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             );
 
             if (!exists) {
-              // Filter out temp optimistic comment and add real one
+              // Drop the optimistic placeholder: it carries a negative id, so
+              // the old "temp-" prefix check never matched anything.
               const commentsWithoutTemp =
-                existingComments.getComments.comments.filter(
-                  (c) => !c.id.toString().startsWith("temp-")
-                );
+                existingComments.getComments.comments.filter((c) => c.id > 0);
 
               cache.writeQuery({
                 query: GetCommentsDocument,

@@ -62,6 +62,15 @@ export default function LoginForm() {
               {isPending ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
+
             <hr className="border-[color:var(--border)]" />
 
             <div className="text-center">

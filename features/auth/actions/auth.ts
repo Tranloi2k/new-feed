@@ -5,6 +5,7 @@ import { signIn, signOut } from "@/auth";
 import {
   signup,
   logout as backendLogout,
+  resetPassword,
   getCurrentUser,
 } from "@/features/auth/lib/auth";
 
@@ -92,6 +93,37 @@ export async function register(
   }
 
   return { success: "Đăng ký thành công." };
+}
+
+export async function resetPasswordAction(
+  _prevState: AuthFormState | undefined,
+  formData: FormData
+): Promise<AuthFormState> {
+  const identifier = String(formData.get("identifier") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (!identifier || !password) {
+    return { error: "Vui lòng điền đầy đủ thông tin." };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "Mật khẩu xác nhận không khớp." };
+  }
+
+  if (password.length < 8) {
+    return { error: "Mật khẩu phải có ít nhất 8 ký tự." };
+  }
+
+  try {
+    await resetPassword({ identifier, password });
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Đặt lại mật khẩu thất bại.",
+    };
+  }
+
+  return { success: "Đã cập nhật mật khẩu. Bạn có thể đăng nhập bằng mật khẩu mới." };
 }
 
 export async function logoutAction() {

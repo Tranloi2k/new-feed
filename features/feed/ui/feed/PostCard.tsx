@@ -3,12 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal } from "lucide-react";
 import CommentSection from "@/app/components/CommentSection";
 import { MAX_CONTENT_LENGTH } from "@/features/feed/constants";
 import { Avatar } from "../primitives/Avatar";
 import { VerifiedBadge } from "../primitives/VerifiedBadge";
-import { IconButton } from "../primitives/IconButton";
 import { PostMedia } from "./PostMedia";
 import { PostActions } from "./PostActions";
 import { cn } from "../utils/cn";
@@ -26,17 +24,18 @@ export type PostCardProps = {
   commentCount: number;
   likeCount: number;
   mediaUrls?: string[] | null;
+  mediaAlt?: string;
   verified?: boolean;
 };
 
 function formatContent(text: string) {
   if (!text) return null;
   return text.split(/(\s+)/).map((part, index) => {
-    if (part.match(/^#\w+/)) {
+    if (part.match(/^[#@]\w+/)) {
       return (
         <span
           key={index}
-          className="font-medium text-[var(--accent)] hover:underline cursor-pointer"
+          className="font-medium text-[var(--text-primary)]"
         >
           {part}
         </span>
@@ -58,6 +57,7 @@ export function PostCard({
   shareCount,
   likeCount,
   mediaUrls,
+  mediaAlt,
   verified,
 }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -79,15 +79,16 @@ export function PostCard({
 
   return (
     <motion.article
+      id={`post-${postId}`}
       layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="overflow-hidden border-b border-[color:var(--border)] bg-[var(--surface)]"
+      className="mt-3 overflow-hidden bg-[var(--surface)] sm:rounded-2xl"
       role="article"
     >
       <div className="px-4 py-5 sm:px-5">
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex items-start gap-3">
           <div className="flex min-w-0 items-start gap-3">
             {profileHref ? (
               <Link href={profileHref} className="shrink-0">
@@ -117,15 +118,12 @@ export function PostCard({
               </p>
             </div>
           </div>
-          <IconButton label="Tùy chọn bài viết">
-            <MoreHorizontal className="h-5 w-5" />
-          </IconButton>
         </header>
 
         {content && (
           <div
             className={cn(
-              "mt-3 pl-[52px] text-[15px] leading-[1.55] text-[var(--text-primary)]",
+              "mt-3 text-[15px] leading-[1.6] text-[var(--text-primary)] sm:pl-[52px]",
               "whitespace-pre-wrap break-words"
             )}
           >
@@ -142,9 +140,10 @@ export function PostCard({
           </div>
         )}
 
-        <div className="pl-[52px]">
-          <PostMedia mediaUrls={mediaUrls ?? []} />
+        <div className="sm:pl-[52px]">
+          <PostMedia mediaUrls={mediaUrls ?? []} alt={mediaAlt} />
           <PostActions
+            postId={postId}
             likeCount={likeCount}
             commentCount={commentCount}
             shareCount={shareCount}

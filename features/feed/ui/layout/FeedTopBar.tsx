@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 import {
   Bell,
   LogOut,
-  Menu,
   User,
 } from "lucide-react";
 import { logoutAction } from "@/features/auth/actions/auth";
@@ -32,6 +31,7 @@ export function FeedTopBar({ user }: { user?: FeedUser }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const apolloClient = useApolloClient();
   const { notifications, unreadCount } = useNotifications();
 
@@ -53,9 +53,9 @@ export function FeedTopBar({ user }: { user?: FeedUser }) {
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 h-[var(--header-height)] bg-[var(--background)]/90 backdrop-blur-xl"
+      className="fixed inset-x-0 top-0 z-50 h-[var(--header-height)] border-b border-[color:var(--border)] bg-[var(--background)]/92 backdrop-blur-xl"
     >
-      <div className="mx-auto grid h-full max-w-[1280px] grid-cols-3 items-center px-4 lg:px-5">
+      <div className="grid h-full w-full grid-cols-3 items-center px-4 lg:px-5">
         <div className="flex items-center">
           <Link href="/home" className="inline-flex items-center gap-2" aria-label={APP_NAME}>
             <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[var(--text-primary)] text-[13px] font-black tracking-[-0.08em] text-[var(--surface)]">
@@ -67,7 +67,9 @@ export function FeedTopBar({ user }: { user?: FeedUser }) {
           </Link>
         </div>
 
-        <p className="text-center text-[15px] font-semibold text-[var(--text-primary)]">Trang chủ</p>
+        <p className="text-center text-[15px] font-semibold text-[var(--text-primary)]">
+          {pathname.startsWith("/messages") ? "Tin nhắn" : ""}
+        </p>
 
         <div className="flex items-center justify-end gap-1">
           <div className="relative">
@@ -95,10 +97,6 @@ export function FeedTopBar({ user }: { user?: FeedUser }) {
               </>
             )}
           </div>
-          <IconButton label="Menu" className="hidden sm:inline-flex">
-            <Menu className="h-5 w-5" />
-          </IconButton>
-
           <div className="relative">
             <button
               type="button"

@@ -5,14 +5,20 @@ import { cn } from "../utils/cn";
 
 const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url);
 
-export function PostMedia({ mediaUrls = [] }: { mediaUrls?: string[] | null }) {
+export function PostMedia({
+  mediaUrls = [],
+  alt = "Nội dung hình ảnh của bài viết",
+}: {
+  mediaUrls?: string[] | null;
+  alt?: string;
+}) {
   const urls = (mediaUrls ?? []).filter(Boolean);
   if (!urls.length) return null;
 
   if (urls.length === 1) {
     const url = urls[0];
     return (
-      <div className="relative mt-3 overflow-hidden rounded-xl border border-[color:var(--border)] bg-black/5">
+      <div className="relative mt-3 overflow-hidden rounded-xl bg-black/5">
         {isVideo(url) ? (
           <video
             className="max-h-[min(70vh,560px)] w-full object-contain"
@@ -26,7 +32,7 @@ export function PostMedia({ mediaUrls = [] }: { mediaUrls?: string[] | null }) {
           <div className="relative aspect-[4/3] w-full sm:aspect-[16/10]">
             <Image
               src={url}
-              alt="Post media"
+              alt={alt}
               fill
               className="object-cover"
               sizes="(max-width: 680px) 100vw, 680px"
@@ -57,7 +63,7 @@ export function PostMedia({ mediaUrls = [] }: { mediaUrls?: string[] | null }) {
           ) : (
             <Image
               src={url}
-              alt={`Media ${index + 1}`}
+              alt={`${alt}, ảnh ${index + 1}`}
               fill
               className="object-cover"
               sizes="340px"

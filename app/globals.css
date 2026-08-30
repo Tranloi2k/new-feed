@@ -17,6 +17,8 @@
   --text-primary: #101010;
   --text-secondary: #686866;
   --text-muted: #9b9b97;
+  --scrollbar-thumb: #c4c4be;
+  --scrollbar-thumb-hover: #92928b;
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-card: 0 12px 36px rgba(0, 0, 0, 0.1);
   --radius-sm: 8px;
@@ -24,7 +26,7 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --feed-max: 640px;
-  --nav-width: 88px;
+  --nav-width: 232px;
   --aside-width: 320px;
   --header-height: 68px;
   --bottom-nav-height: 62px;
@@ -46,6 +48,8 @@
     --text-primary: #f3f3f1;
     --text-secondary: #a6a6a1;
     --text-muted: #777773;
+    --scrollbar-thumb: #41413d;
+    --scrollbar-thumb-hover: #62625c;
     --shadow-soft: none;
     --shadow-card: 0 16px 44px rgba(0, 0, 0, 0.38);
   }
@@ -63,15 +67,42 @@
 @layer base {
   * {
     @apply border-[color:var(--border)];
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+    scrollbar-width: thin;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 44px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: var(--scrollbar-thumb);
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
   }
 
   html {
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
   }
 
   body {
     background: var(--background);
     color: var(--foreground);
+    min-width: 320px;
+    overflow-x: hidden;
     font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -81,6 +112,20 @@
   ::selection {
     background: var(--accent-soft);
     color: var(--text-primary);
+  }
+
+  button,
+  a,
+  input,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (hover: hover) {
+  button,
+  a {
+    cursor: pointer;
   }
 }
 

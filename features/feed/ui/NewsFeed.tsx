@@ -3,6 +3,7 @@
 import { useQuery } from "@apollo/client/react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
+import { RefreshCw } from "lucide-react";
 import {
   GetNewsFeedDocument,
   type GetNewsFeedQuery,
@@ -97,15 +98,21 @@ export function NewsFeed() {
 
   return (
     <>
-      <div className="sticky top-[var(--header-height)] z-30 grid grid-cols-2 border-b border-[color:var(--border)] bg-[var(--surface-elevated)] backdrop-blur-xl">
-        <button className="relative h-14 text-sm font-semibold text-[var(--text-primary)]">
-          Dành cho bạn
-          <span className="absolute inset-x-7 bottom-0 h-0.5 rounded-full bg-[var(--text-primary)]" />
+      <header className="sticky top-[var(--header-height)] z-30 flex h-16 items-center justify-between bg-[var(--background)]/92 px-4 backdrop-blur-xl sm:px-1">
+        <div>
+          <h1 className="text-lg font-bold tracking-[-0.035em] text-[var(--text-primary)]">Dành cho bạn</h1>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Khám phá những câu chuyện mới</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={loading}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50"
+          aria-label="Làm mới bảng tin"
+        >
+          <RefreshCw className={`h-[18px] w-[18px] ${loading && data ? "animate-spin" : ""}`} />
         </button>
-        <button className="h-14 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]">
-          Đang theo dõi
-        </button>
-      </div>
+      </header>
       <Composer />
 
       {isInitialLoading && <FeedSkeletons />}
@@ -123,6 +130,7 @@ export function NewsFeed() {
               author={post.user?.fullName || post.user?.username || "Unknown"}
               username={post.user?.username}
               avatarUrl={post.user?.avatarUrl || undefined}
+              mediaAlt={`Nội dung hình ảnh từ ${post.user?.fullName || post.user?.username || "bài viết"}`}
               time={formatTime(post.createdAt)}
               content={post.content || ""}
               likeCount={post.likeCount}

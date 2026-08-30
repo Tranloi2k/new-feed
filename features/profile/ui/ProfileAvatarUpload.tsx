@@ -55,13 +55,13 @@ export function ProfileAvatarUpload({
 
   if (!profile.isOwnProfile) {
     return (
-      <Avatar src={profile.avatarUrl || undefined} name={displayName} size="xl" />
+      <Avatar src={profile.avatarUrl || undefined} name={displayName} size="profile" />
     );
   }
 
   return (
     <div className="relative shrink-0">
-      <Avatar src={displaySrc} name={displayName} size="xl" />
+      <Avatar src={displaySrc} name={displayName} size="profile" />
       {uploading && (
         <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -71,7 +71,7 @@ export function ProfileAvatarUpload({
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-[var(--accent)] text-white shadow-md transition hover:opacity-90 disabled:opacity-60"
+        className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--background)] bg-[var(--text-primary)] text-[var(--surface)] transition hover:opacity-85 disabled:opacity-60"
         aria-label="Đổi ảnh đại diện"
       >
         <Camera className="h-4 w-4" />

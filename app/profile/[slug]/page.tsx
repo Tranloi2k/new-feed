@@ -68,18 +68,12 @@ export default async function ProfileSlugPage({ params }: PageProps) {
   const { slug } = await params;
   const token = await getAccessToken();
   const { username } = parseProfileSlug(slug);
+  let profile: UserProfile | null = null;
+  let loadError: string | null = null;
 
   try {
-    const profile = await resolveProfile(slug, token);
-    if (!profile) {
-      return (
-        <ProfileNotFound username={username || decodeURIComponent(slug)} />
-      );
-    }
-
-    ensureCanonicalSlug(slug, profile);
-
-    return <ProfilePage initialProfile={profile} />;
+    profile = await resolveProfile(slug, token);
+    if (profile) ensureCanonicalSlug(slug, profile);
   } catch (error) {
     if (
       error &&
@@ -90,8 +84,13 @@ export default async function ProfileSlugPage({ params }: PageProps) {
       throw error;
     }
     console.error("Profile load failed:", error);
-    const message =
+    loadError =
       error instanceof Error ? error.message : "Không kết nối được API";
-    return <ProfileLoadError message={message} />;
   }
+
+  if (loadError) return <ProfileLoadError message={loadError} />;
+  if (!profile) {
+    return <ProfileNotFound username={username || decodeURIComponent(slug)} />;
+  }
+  return <ProfilePage initialProfile={profile} />;
 }

@@ -7,7 +7,7 @@ import { isValidImageSrc } from "../utils/image-url";
 type AvatarProps = {
   src?: string | null;
   name: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "profile";
   showOnline?: boolean;
   className?: string;
 };
@@ -17,6 +17,7 @@ const sizes = {
   md: "h-10 w-10 text-sm",
   lg: "h-12 w-12 text-base",
   xl: "h-14 w-14 text-lg",
+  profile: "h-20 w-20 text-2xl sm:h-24 sm:w-24",
 };
 
 export function Avatar({

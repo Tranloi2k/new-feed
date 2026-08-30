@@ -6,34 +6,60 @@ import { MobileBottomNav } from "./MobileBottomNav";
 export function FeedShell({
   user,
   children,
+  layout = "feed",
 }: {
   user?: FeedUser;
   children: React.ReactNode;
+  layout?: "feed" | "chat";
 }) {
+  const isChatLayout = layout === "chat";
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <FeedTopBar user={user} />
 
-      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-0 px-0 pt-[var(--header-height)] lg:grid-cols-[var(--nav-width)_minmax(0,1fr)] lg:gap-7 lg:px-5 xl:grid-cols-[var(--nav-width)_minmax(0,1fr)_var(--aside-width)]">
+      <div
+        className={
+          isChatLayout
+            ? "grid w-full grid-cols-1 pt-[var(--header-height)] lg:grid-cols-[var(--nav-width)_minmax(0,1fr)]"
+            : "grid w-full grid-cols-1 pt-[var(--header-height)] lg:grid-cols-[minmax(0,1fr)_minmax(0,680px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,720px)_minmax(0,1fr)]"
+        }
+      >
         <div className="hidden lg:block">
-          <LeftNav user={user} />
+          <LeftNav user={user} expanded={isChatLayout} />
         </div>
 
         <main
-          className="min-h-[calc(100vh-var(--header-height))] w-full pb-[var(--bottom-nav-height)] lg:pb-8"
-          role="feed"
+          className={
+            isChatLayout
+              ? "min-h-[calc(100vh-var(--header-height))] w-full pb-[var(--bottom-nav-height)] lg:pb-0"
+              : "min-h-[calc(100vh-var(--header-height))] w-full pb-[var(--bottom-nav-height)] lg:pb-8"
+          }
+          role={isChatLayout ? undefined : "feed"}
         >
-          <div className="feed-column mx-auto w-full lg:max-w-[var(--feed-max)]">
-            <div className="min-h-[calc(100vh-var(--header-height))] overflow-hidden border-x border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-soft)] sm:rounded-t-[14px] sm:border-t">
+          <div
+            className={
+              isChatLayout
+                ? "w-full"
+                : "w-full"
+            }
+          >
+            <div
+              className={
+                isChatLayout
+                  ? "min-h-[calc(100vh-var(--header-height))] overflow-hidden bg-[var(--surface)]"
+                  : "min-h-[calc(100vh-var(--header-height))]"
+              }
+            >
               {children}
             </div>
           </div>
         </main>
 
-        <RightPanel />
+        {!isChatLayout && <RightPanel user={user} />}
       </div>
 
-      <MobileBottomNav />
+      <MobileBottomNav user={user} />
     </div>
   );
 }

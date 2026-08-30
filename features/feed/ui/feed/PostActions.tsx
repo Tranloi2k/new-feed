@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bookmark,
+  Check,
   Heart,
   MessageCircle,
   Share2,
@@ -11,6 +12,7 @@ import {
 import { cn } from "../utils/cn";
 
 type PostActionsProps = {
+  postId: string;
   likeCount: number;
   commentCount: number;
   shareCount: number;
@@ -19,6 +21,7 @@ type PostActionsProps = {
 };
 
 export function PostActions({
+  postId,
   likeCount,
   commentCount,
   shareCount,
@@ -27,7 +30,23 @@ export function PostActions({
 }: PostActionsProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [shared, setShared] = useState(false);
   const displayLikes = liked ? likeCount + 1 : likeCount;
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/home#post-${postId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Bài viết trên NewFeed", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+      setShared(true);
+      window.setTimeout(() => setShared(false), 1800);
+    } catch {
+      // The native share dialog can be dismissed without further action.
+    }
+  };
 
   const actions = [
     {
@@ -48,11 +67,11 @@ export function PostActions({
     },
     {
       key: "share",
-      icon: Share2,
-      label: "Chia sẻ",
+      icon: shared ? Check : Share2,
+      label: shared ? "Đã sao chép liên kết" : "Chia sẻ",
       count: shareCount,
       active: false,
-      onClick: () => {},
+      onClick: handleShare,
     },
     {
       key: "bookmark",
@@ -72,7 +91,7 @@ export function PostActions({
         </p>
       )}
 
-      <div className="flex items-center gap-1">
+      <div className="flex max-w-md items-center justify-between gap-1">
         {actions.map((action) => (
           <motion.button
             key={action.key}
@@ -81,8 +100,9 @@ export function PostActions({
             transition={{ duration: 0.12 }}
             onClick={action.onClick}
             aria-label={action.label}
+            aria-pressed={action.key === "like" || action.key === "bookmark" ? action.active : undefined}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded-full p-2 text-sm font-medium transition-colors duration-150",
+              "flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2.5 py-2 text-sm font-medium transition-colors duration-150",
               "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               action.active && "text-[var(--accent)]"

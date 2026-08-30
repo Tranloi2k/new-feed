@@ -1,26 +1,34 @@
+fragment CommentAuthor on User {
+  id
+  username
+  fullName
+  avatarUrl
+}
+
+# Every operation that can end up in the GetComments cache entry selects the
+# same fields. When the mutation left out `replies`, writing its result into
+# that entry failed with "Missing field 'replies'".
+fragment CommentFields on Comment {
+  id
+  content
+  createdAt
+  user {
+    ...CommentAuthor
+  }
+  replies {
+    id
+    content
+    createdAt
+    user {
+      ...CommentAuthor
+    }
+  }
+}
+
 query GetComments($postId: Int!, $limit: Int, $cursor: Int) {
   getComments(postId: $postId, limit: $limit, cursor: $cursor) {
     comments {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        fullName
-        avatarUrl
-      }
-      replies {
-        id
-        content
-        createdAt
-        user {
-          id
-          username
-          fullName
-          avatarUrl
-        }
-      }
+      ...CommentFields
     }
     hasMore
     nextCursor
@@ -32,41 +40,14 @@ mutation CreateComment($input: CreateCommentInput!) {
     success
     message
     comment {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        fullName
-        avatarUrl
-      }
+      ...CommentFields
     }
   }
 }
 
 subscription CommentAdded($postId: Int!) {
   commentAdded(postId: $postId) {
-    id
-    content
-    createdAt
-    user {
-      id
-      username
-      fullName
-      avatarUrl
-    }
-    replies {
-      id
-      content
-      createdAt
-      user {
-        id
-        username
-        fullName
-        avatarUrl
-      }
-    }
+    ...CommentFields
   }
 }
 

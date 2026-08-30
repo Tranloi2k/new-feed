@@ -55,10 +55,10 @@ export function FollowButton({
       onClick={toggle}
       disabled={loading}
       className={cn(
-        "rounded-full px-5 py-2 text-sm font-semibold transition-colors",
+        "h-11 w-full rounded-xl px-5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
         following || requested
-          ? "border border-[color:var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
-          : "bg-[var(--accent)] text-white hover:opacity-90",
+          ? "border border-[color:var(--border-strong)] text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
+          : "bg-[var(--text-primary)] text-[var(--surface)] hover:opacity-85",
         loading && "opacity-60 cursor-not-allowed"
       )}
     >

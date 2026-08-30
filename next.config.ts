@@ -4,6 +4,9 @@ const gatewayUrl =
   process.env.API_GATEWAY_URL?.replace(/\/$/, "") || "http://localhost:8080";
 
 const nextConfig: NextConfig = {
+  // Socket.IO uses a trailing slash by default; redirecting it drops the
+  // WebSocket upgrade before rewrites can proxy the connection.
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     // Do NOT proxy /api/auth/session|csrf|providers|... — those are NextAuth (App Router).
     return [
@@ -12,6 +15,10 @@ const nextConfig: NextConfig = {
       { source: "/api/auth/logout", destination: `${gatewayUrl}/api/auth/logout` },
       { source: "/api/auth/me", destination: `${gatewayUrl}/api/auth/me` },
       {
+        source: "/api/auth/reset-password",
+        destination: `${gatewayUrl}/api/auth/reset-password`,
+      },
+      {
         source: "/api/users/:id/profile",
         destination: `${gatewayUrl}/api/users/:id/profile`,
       },
@@ -19,6 +26,15 @@ const nextConfig: NextConfig = {
       {
         source: "/api/notifications/:path*",
         destination: `${gatewayUrl}/api/notifications/:path*`,
+      },
+      { source: "/api/chat/:path*", destination: `${gatewayUrl}/api/chat/:path*` },
+      {
+        source: "/chat/socket.io/",
+        destination: `${gatewayUrl}/chat/socket.io/`,
+      },
+      {
+        source: "/chat/socket.io/:path+",
+        destination: `${gatewayUrl}/chat/socket.io/:path+`,
       },
       { source: "/api/media/:path*", destination: `${gatewayUrl}/api/media/:path*` },
       { source: "/graphql/post", destination: `${gatewayUrl}/graphql/post` },

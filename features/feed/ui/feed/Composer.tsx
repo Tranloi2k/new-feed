@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@apollo/client/react";
 import { useSession } from "next-auth/react";
-import { ImageIcon, MapPin, Video, X } from "lucide-react";
+import { ImageIcon, MapPin, Trash2, Video, X } from "lucide-react";
 import { CreatePostDocument } from "@/features/feed/lib/documents";
 import { uploadFiles } from "@/app/lib/actions/uploadMedia";
 import { Avatar } from "../primitives/Avatar";
@@ -20,10 +20,18 @@ export function Composer() {
   const [postType, setPostType] = useState<"TEXT" | "IMAGE" | "VIDEO" | "LINK">("TEXT");
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState<{ url: string; type: string }[]>([]);
+  const previewsRef = useRef<{ url: string; type: string }[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showLocation, setShowLocation] = useState(false);
 
   const userName = session?.user?.name || session?.user?.email || "Bạn";
+  const userAvatar = session?.user?.image;
+
+  const releasePreviews = useCallback(() => {
+    previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview.url));
+    previewsRef.current = [];
+    setPreviews([]);
+  }, []);
 
   const [createPost, { loading, error: mutationError }] = useMutation(CreatePostDocument, {
     context: { credentials: "include" },
@@ -33,7 +41,7 @@ export function Composer() {
         setContent("");
         setLocation("");
         setSelectedFiles([]);
-        setPreviews([]);
+        releasePreviews();
         setPostType("TEXT");
         setShowLocation(false);
         setShowModal(false);
@@ -47,19 +55,20 @@ export function Composer() {
     setShowModal(true);
   };
 
-  const closeComposer = () => {
+  const closeComposer = useCallback(() => {
     if (loading || uploading) return;
     setPostType("TEXT");
     setSelectedFiles([]);
-    setPreviews([]);
+    releasePreviews();
     setLocation("");
     setSubmitError(null);
     setShowLocation(false);
     setShowModal(false);
-  };
+  }, [loading, releasePreviews, uploading]);
 
   useEffect(() => {
-    const openComposer = () => {
+    const openComposer = (event?: Event) => {
+      event?.preventDefault();
       setPostType("TEXT");
       setSubmitError(null);
       setShowModal(true);
@@ -82,8 +91,31 @@ export function Composer() {
     return () => window.removeEventListener(OPEN_COMPOSER_EVENT, openComposer);
   }, []);
 
+  useEffect(() => {
+    if (!showModal) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeComposer();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showModal, closeComposer]);
+
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+
+  useEffect(() => () => {
+    previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview.url));
+  }, []);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    releasePreviews();
     setSelectedFiles(files);
     setPreviews(
       files.map((file) => ({
@@ -93,6 +125,12 @@ export function Composer() {
     );
     if (files[0]?.type.startsWith("video/")) setPostType("VIDEO");
     else if (files[0]?.type.startsWith("image/")) setPostType("IMAGE");
+  };
+
+  const removePreview = (index: number) => {
+    URL.revokeObjectURL(previews[index].url);
+    setPreviews((items) => items.filter((_, itemIndex) => itemIndex !== index));
+    setSelectedFiles((items) => items.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,17 +176,18 @@ export function Composer() {
     <>
       <motion.section
         layout
-        className="border-b border-[color:var(--border)] bg-[var(--surface)] px-4 py-4 sm:px-5"
+        className="mt-3 bg-[var(--surface)] px-4 py-4 sm:rounded-2xl sm:px-5"
         aria-label="Tạo bài viết"
       >
         <div className="flex items-center gap-3">
-          <Avatar name={userName} size="md" />
+          <Avatar src={userAvatar} name={userName} size="md" />
           <button
             type="button"
             onClick={openTextComposer}
+            data-composer-trigger
             className={cn(
-              "min-w-0 flex-1 py-2 text-left text-[15px] text-[var(--text-muted)]",
-              "transition-colors hover:text-[var(--text-secondary)] focus-visible:outline-none"
+              "min-h-11 min-w-0 flex-1 rounded-lg px-1 py-2 text-left text-[15px] text-[var(--text-muted)]",
+              "transition-colors hover:text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             )}
           >
             Bắt đầu một cuộc trò chuyện...
@@ -160,7 +199,7 @@ export function Composer() {
               setSubmitError(null);
               setShowModal(true);
             }}
-            className="rounded-full p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             aria-label="Thêm ảnh"
           >
             <ImageIcon className="h-[19px] w-[19px]" />
@@ -168,7 +207,7 @@ export function Composer() {
           <button
             type="button"
             onClick={openTextComposer}
-            className="rounded-lg border border-[color:var(--border-strong)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-muted)]"
+            className="hidden min-h-10 rounded-lg border border-[color:var(--border-strong)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:inline-flex sm:items-center"
           >
             Đăng
           </button>
@@ -183,6 +222,7 @@ export function Composer() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
             onClick={closeComposer}
+            role="presentation"
           >
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.98 }}
@@ -190,10 +230,13 @@ export function Composer() {
               exit={{ opacity: 0, y: 24, scale: 0.98 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[92vh] w-full max-w-[620px] overflow-hidden rounded-t-2xl border border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] sm:rounded-2xl"
+              className="max-h-[92dvh] w-full max-w-[620px] overflow-hidden rounded-t-2xl border border-[color:var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] sm:rounded-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="composer-title"
             >
               <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
-                <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                <h2 id="composer-title" className="text-base font-semibold text-[var(--text-primary)]">
                   Bài viết mới
                 </h2>
                 <button
@@ -208,7 +251,7 @@ export function Composer() {
 
               <form onSubmit={handleSubmit} className="overflow-y-auto p-5">
                 <div className="flex gap-3">
-                  <Avatar name={userName} size="md" />
+                  <Avatar src={userAvatar} name={userName} size="md" />
                   <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
@@ -279,11 +322,11 @@ export function Composer() {
                 )}
 
                 {previews.length > 0 && (
-                  <div className="ml-[52px] mt-4 grid grid-cols-2 gap-2">
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:ml-[52px]">
                     {previews.map((preview, index) => (
                       <div
-                        key={index}
-                        className="overflow-hidden rounded-[var(--radius-md)]"
+                        key={preview.url}
+                        className="group relative overflow-hidden rounded-[var(--radius-md)] border border-[color:var(--border)] bg-[var(--surface-muted)]"
                       >
                         {preview.type === "video" ? (
                           <video src={preview.url} controls className="w-full" />
@@ -295,6 +338,14 @@ export function Composer() {
                             className="w-full object-cover"
                           />
                         )}
+                        <button
+                          type="button"
+                          onClick={() => removePreview(index)}
+                          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                          aria-label={`Xóa tệp ${index + 1}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     ))}
                   </div>

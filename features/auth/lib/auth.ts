@@ -61,6 +61,17 @@ async function signup(params: {
   return body;
 }
 
+async function resetPassword(params: { identifier: string; password: string }) {
+  const response = await fetch(`${getApiUrl()}/api/auth/reset-password`, {
+    method: "POST",
+    body: JSON.stringify(params),
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  return parseAuthResponse(response);
+}
+
 async function logout() {
   try {
     const accessToken = await getAccessToken();
@@ -116,4 +127,4 @@ async function getCurrentUser(): Promise<AuthUser | null> {
   }
 }
 
-export { login, signup, logout, getCurrentUser };
+export { login, signup, logout, resetPassword, getCurrentUser };

@@ -8,6 +8,7 @@ import {
   type GetUserPostsQuery,
 } from "@/features/profile/lib/documents";
 import { PostCard } from "@/features/feed/ui/feed/PostCard";
+import { FeedSkeletons } from "@/features/feed/ui/feed/FeedSkeletons";
 import {
   FeedEmpty,
   FeedEndMessage,
@@ -67,15 +68,14 @@ export function ProfilePosts({ userId }: ProfilePostsProps) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 border-b border-[color:var(--border)]">
-        <h2 className="relative py-4 text-center text-sm font-semibold text-[var(--text-primary)]">
+      <div className="border-y border-[color:var(--border)] px-4 sm:px-6">
+        <h2 className="relative inline-flex h-14 items-center text-sm font-semibold text-[var(--text-primary)]">
           Bài viết
-          <span className="absolute inset-x-8 bottom-0 h-0.5 bg-[var(--text-primary)]" />
+          <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[var(--text-primary)]" />
         </h2>
-        <span className="py-4 text-center text-sm text-[var(--text-muted)]">Phản hồi</span>
       </div>
 
-      {loading && !data && <FeedLoadMoreSpinner />}
+      {loading && !data && <FeedSkeletons />}
 
       {error && <FeedError onRetry={() => refetch()} />}
 
@@ -88,6 +88,7 @@ export function ProfilePosts({ userId }: ProfilePostsProps) {
             author={post.user?.fullName || post.user?.username || "Unknown"}
             username={post.user?.username}
             avatarUrl={post.user?.avatarUrl || undefined}
+            mediaAlt={`Nội dung hình ảnh từ ${post.user?.fullName || post.user?.username || "bài viết"}`}
             time={formatTime(post.createdAt)}
             content={post.content || ""}
             mediaUrls={(post.mediaUrls?.filter(Boolean) as string[]) || []}

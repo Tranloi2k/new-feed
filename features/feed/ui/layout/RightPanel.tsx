@@ -1,62 +1,97 @@
 "use client";
 
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Bell, RefreshCw } from "lucide-react";
+import { useNotifications } from "@/features/notifications/hooks/useNotifications";
+import { getProfileHref } from "@/features/profile/lib/profile-routes";
 import { Avatar } from "../primitives/Avatar";
+import type { FeedUser } from "./FeedTopBar";
 
-const suggestedUsers = [
-  { name: "Mai Linh", username: "mailinh", note: "Thiết kế sản phẩm" },
-  { name: "Hoàng Nguyễn", username: "hoangdev", note: "Frontend engineer" },
-  { name: "Khoa Trần", username: "khoapm", note: "Product & indie maker" },
-];
+function formatTime(iso: string) {
+  const date = new Date(iso);
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return "Vừa xong";
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ`;
+  return date.toLocaleDateString("vi-VN");
+}
 
-const topics = ["Thiết kế", "Công nghệ", "Chuyện đi làm"];
+export function RightPanel({ user }: { user?: FeedUser }) {
+  const { notifications, unreadCount, loading, error, reload } = useNotifications();
+  const profileHref = user ? getProfileHref(user) : "/login";
 
-export function RightPanel() {
   return (
     <aside className="hidden xl:block">
-      <div className="sticky top-[calc(var(--header-height)+1rem)] space-y-5">
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input
-            type="search"
-            placeholder="Tìm kiếm"
-            className="h-12 w-full rounded-xl border border-[color:var(--border)] bg-[var(--surface)] pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
-          />
-        </label>
+      <div className="fixed bottom-0 right-0 top-[var(--header-height)] w-[calc((100vw-720px)/2)] min-w-[280px] overflow-hidden px-5 py-6">
+        <div className="ml-auto max-w-[340px] space-y-7">
+        {user && (
+          <Link href={profileHref} className="flex items-center gap-3 rounded-xl px-1 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+            <Avatar src={user.avatarUrl} name={user.fullName || user.username} size="lg" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{user.fullName || user.username}</p>
+              <p className="truncate text-xs text-[var(--text-muted)]">@{user.username}</p>
+            </div>
+            <span className="text-xs font-semibold text-[var(--text-secondary)]">Hồ sơ</span>
+          </Link>
+        )}
 
-        <section className="rounded-xl border border-[color:var(--border)] bg-[var(--surface)] p-5">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">Gợi ý cho bạn</h2>
-            <button type="button" className="text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Xem thêm</button>
+        <section aria-labelledby="activity-heading">
+          <div className="mb-3 flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <h2 id="activity-heading" className="text-[15px] font-bold text-[var(--text-primary)]">Hoạt động gần đây</h2>
+              {unreadCount > 0 && (
+                <span className="rounded-full bg-[var(--text-primary)] px-2 py-0.5 text-[10px] font-bold text-[var(--surface)]">{unreadCount > 9 ? "9+" : unreadCount}</span>
+              )}
+            </div>
+            <button type="button" onClick={reload} disabled={loading} className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50" aria-label="Làm mới thông báo">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
           </div>
-          <ul className="space-y-4">
-            {suggestedUsers.map((person) => (
-              <li key={person.username} className="flex items-center gap-3">
-                <Avatar name={person.name} size="md" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{person.name}</p>
-                  <p className="truncate text-xs text-[var(--text-muted)]">{person.note}</p>
-                </div>
-                <button type="button" className="rounded-lg bg-[var(--text-primary)] px-3.5 py-2 text-xs font-semibold text-[var(--surface)] transition-opacity hover:opacity-80">
-                  Theo dõi
-                </button>
-              </li>
-            ))}
-          </ul>
+
+          <div className="overflow-hidden rounded-2xl bg-[var(--surface)]">
+            {loading && notifications.length === 0 && (
+              <div className="space-y-4 p-4" aria-label="Đang tải thông báo">
+                {[0, 1, 2].map((item) => (
+                  <div key={item} className="flex gap-3">
+                    <span className="shimmer h-9 w-9 shrink-0 rounded-full" />
+                    <span className="shimmer mt-1 h-8 flex-1 rounded-lg" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="px-5 py-8 text-center">
+                <Bell className="mx-auto h-5 w-5 text-[var(--text-muted)]" />
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">Không tải được hoạt động.</p>
+              </div>
+            )}
+
+            {!loading && !error && notifications.length === 0 && (
+              <div className="px-5 py-8 text-center">
+                <Bell className="mx-auto h-5 w-5 text-[var(--text-muted)]" />
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">Chưa có hoạt động mới.</p>
+              </div>
+            )}
+
+            {notifications.length > 0 && (
+              <ul>
+                {notifications.slice(0, 5).map((notification) => (
+                  <li key={notification.id} className="flex gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--surface-muted)]">
+                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.read ? "bg-[var(--border-strong)]" : "bg-[var(--text-primary)]"}`} />
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">{notification.message}</p>
+                      <p className="mt-1 text-[11px] text-[var(--text-muted)]">{formatTime(notification.createdAt)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
 
-        <section className="px-1">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-[var(--text-muted)]">Chủ đề hôm nay</p>
-          <div className="flex flex-wrap gap-2">
-            {topics.map((topic) => (
-              <button key={topic} type="button" className="rounded-full border border-[color:var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]">
-                {topic}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <p className="px-1 text-[11px] leading-5 text-[var(--text-muted)]">© 2026 NewFeed · Quyền riêng tư · Điều khoản</p>
+          <p className="px-1 text-[11px] leading-5 text-[var(--text-muted)]">© 2026 NewFeed · Quyền riêng tư · Điều khoản</p>
+        </div>
       </div>
     </aside>
   );
