@@ -2,6 +2,7 @@
 
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/auth";
+import { redirect } from "next/navigation";
 import {
   signup,
   logout as backendLogout,
@@ -71,28 +72,15 @@ export async function register(
       ...(fullName ? { fullName } : {}),
     });
 
-    // Signup issues an API session, while NextAuth signs in once more below.
-    // Revoke the temporary session so it does not remain active for 30 days.
+    // Signup issues an API session. Clear it so the user lands on login signed out.
     await backendLogout();
-
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/home",
-    });
   } catch (error) {
-    if (error instanceof AuthError) {
-      return {
-        error: "Đăng ký thành công nhưng đăng nhập thất bại. Vui lòng thử đăng nhập.",
-      };
-    }
-
     const message =
       error instanceof Error ? error.message : "Đăng ký thất bại.";
     return { error: message };
   }
 
-  return { success: "Đăng ký thành công." };
+  redirect("/login?registered=1");
 }
 
 export async function resetPasswordAction(
