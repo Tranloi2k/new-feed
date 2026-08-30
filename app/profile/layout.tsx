@@ -1,6 +1,8 @@
 import { FeedShell } from "@/features/feed/ui/layout/FeedShell";
 import { getCurrentUser } from "@/features/auth/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfileLayout({
   children,
 }: {

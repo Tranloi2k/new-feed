@@ -1,4 +1,5 @@
 import { getApiUrl } from "@/features/shared/lib/env";
+import { unstable_rethrow } from "next/navigation";
 import {
   clearAuthCookies,
   getAccessToken,
@@ -122,6 +123,7 @@ async function getCurrentUser(): Promise<AuthUser | null> {
     const data = (await response.json()) as AuthApiResponse;
     return data.data ?? null;
   } catch (error) {
+    unstable_rethrow(error);
     console.error("Failed to fetch current user:", error);
     return null;
   }
